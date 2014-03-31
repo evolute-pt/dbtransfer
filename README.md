@@ -1,4 +1,4 @@
 dbtransfer
 ==========
 
-DBTransfer - versatileand fast database transfer tool
+DBTransfer - versatile and fast database transfer tool
