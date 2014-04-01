@@ -1,0 +1,240 @@
+/*
+ * Mover.java
+ *
+ * Created on February 7, 2005, 8:27 PM
+ */
+
+package dbtransfer.transfer;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import pt.evolute.arrays.Virtual2DArray;
+import pt.evolute.db.Connector;
+import pt.evolute.string.UnicodeChecker;
+import dbtransfer.Constants;
+import dbtransfer.db.DBConnection;
+import dbtransfer.db.DBConnector;
+import dbtransfer.db.beans.ColumnDefinition;
+import dbtransfer.db.beans.ForeignKeyDefinition;
+import dbtransfer.db.beans.Name;
+import dbtransfer.db.helper.Helper;
+import dbtransfer.db.helper.HelperManager;
+
+
+/**
+ *
+ * @author  lflores
+ */
+public class Mover extends Connector implements Constants
+{
+	public static final int MAX_BATCH_ROWS = 1024;
+	
+	public static boolean reorder = false;
+	
+	private final Name TABLES[];
+	private final String SRC_URL;
+	private final String DEST_URL;
+	private final DBConnection CON_SRC;
+	private final DBConnection CON_DEST;
+
+	private final boolean ESCAPE_UNICODE;
+	
+	private static final long MAX_MEM = Runtime.getRuntime().maxMemory();
+	
+//	private static int oom = 0;
+	
+	/** Creates a new instance of Mover */
+	public Mover( Properties props )
+		throws Exception
+	{
+		SRC_URL = props.getProperty( URL_DB_SOURCE );
+		ESCAPE_UNICODE = "true".equals( props.getProperty( TRANSFER_ESCAPE_UNICODE ) );
+		String srcUser = props.getProperty( USER_DB_SOURCE );
+		String srcPasswd = props.getProperty( PASSWORD_DB_SOURCE );
+		boolean ignoreEmpty = Boolean.parseBoolean( props.getProperty( ONLY_NOT_EMPTY, "false" ) );
+		
+		CON_SRC = DBConnector.getConnection( SRC_URL, srcUser, srcPasswd, ignoreEmpty );
+		
+		DEST_URL = props.getProperty( URL_DB_DESTINATION );
+		String destUser = props.getProperty( USER_DB_DESTINATION );
+		String destPasswd = props.getProperty( PASSWORD_DB_DESTINATION );
+		CON_DEST = DBConnector.getConnection( DEST_URL, destUser, destPasswd, false );
+System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
+
+		List<Name> v = CON_SRC.getTableList();
+		if( false )
+		{
+			System.out.println( "Reordering tables for dependencies (" + v.size() + " tables)" );
+			v = reorder( v );
+		}
+		TABLES = v.toArray( new Name[ v.size() ] );
+	}
+	
+	private List<Name> reorder(List<Name> v) throws Exception 
+	{
+		Map<Name,Name> m = new HashMap<Name,Name>();
+		List<Name> deps = new ArrayList<Name>();
+		List<Name> list = new ArrayList<Name>();
+		while( !v.isEmpty() && !deps.isEmpty() )
+		{
+			if( !deps.isEmpty() )
+			{
+				v.addAll( deps );
+			}
+			for( Name n: v )
+			{
+				List<ForeignKeyDefinition> fks = CON_DEST.getForeignKeyList( n );
+				boolean ok = true;
+				for( ForeignKeyDefinition fk: fks )
+				{
+					if( !m.containsKey( fk.columns.get( 0 ).referencedTable ) )
+					{
+						deps.add( n );
+						ok = false;
+						break;
+					}
+				}
+				if( ok )
+				{
+					list.add( n );
+				}
+			}
+			v.clear();
+		}
+		System.out.println( "Reordered (" + list.size() + " tables)" );
+		return list;
+	}
+
+	public void moveDB()
+		throws Exception
+	{
+		System.out.println( "Moving (" + TABLES.length + " tables)" );
+		final List<Object> TEMP = new LinkedList<Object>();
+		List<AsyncStatement> threads = new LinkedList<AsyncStatement>();
+		Helper tr = HelperManager.getTranslator( DEST_URL );
+		for( int i = 0; i < TABLES.length; ++i )
+		{
+			Virtual2DArray rs = CON_SRC.getFullTable( TABLES[ i ] );
+			System.out.println( "Moving table: " + TABLES[ i ] + " (" + rs.rowCount() + " rows)" );
+//			ResultSet rs = null;
+			if( rs != null && rs.rowCount() > 0 )
+			{
+				StringBuilder buff = new StringBuilder( "INSERT INTO " );
+				StringBuilder args = new StringBuilder();
+				buff.append( TABLES[ i ].saneName );
+				buff.append( " ( " );
+				
+				List<ColumnDefinition> columns = CON_SRC.getColumnList( TABLES[ i ] );
+				for( int j = 0; j < columns.size(); ++j )
+				{
+					if( j != 0 )
+					{
+						buff.append( ", " );
+						args.append( ", " );
+					}
+					buff.append( tr.outputName( columns.get( j ).name.saneName ) );
+					args.append( "?" );
+				}
+				buff.append( " ) VALUES ( " );
+				buff.append( args );
+				buff.append( " )" );
+				String insert = buff.toString();
+	//			PreparedStatement pstm = CON_DEST.prepareStatement( insert );
+	System.out.println( "I: " + i + " " + TABLES[ i ].saneName );
+				int typesCache[] = new int[ columns.size() ];
+				for( int j = 0; j < columns.size(); ++j )
+				{
+					typesCache[ j ] = columns.get( j ).sqlType;
+					if( typesCache[ j ] == 0 )
+					{
+						System.out.println( "Can't resolve Type: " + columns.get( j ).name + " / " + columns.get( j ).sqlTypeName );
+					}
+				}
+				// TODO - do only if table has identity (when target is sqlserver)
+				String pre = tr.preLoadSetup( TABLES[ i ].saneName );
+				String post = tr.postLoadSetup( TABLES[ i ].saneName );
+				AsyncStatement astm = new AsyncStatement( typesCache, CON_DEST, insert, i, pre, post, tr );
+				threads.add( astm );
+				int rows = 0;
+				for( int row = 0; row < rs.rowCount(); ++row  )
+				{
+					for( int j = 0; j < typesCache.length; ++j )
+					{
+						Object data = rs.get( row, j );
+						if( ESCAPE_UNICODE && data != null 
+								&& data instanceof String )
+						{
+							data = UnicodeChecker.parseToUnicode( ( String )data );
+						}
+						TEMP.add( data );
+	//					pstm.setObject( j, rs.getObject( j ), rsmd.getColumnType( j ) );
+					}
+					++rows;
+					astm.DATA_SHARED.addAll( TEMP );
+					TEMP.clear();
+					if( ( rows % MAX_BATCH_ROWS ) == 0 )
+					{
+						System.out.print( "+" + i + "." + ( rows / MAX_BATCH_ROWS ) );
+						while( !astm.DATA_SHARED.isEmpty() && cacheLimit() )
+						{
+							try
+							{
+								System.out.print( "W" );
+								Thread.sleep( 1000 );
+							}
+							catch( Exception ex )
+							{
+							}
+						}
+					}
+				}
+				System.out.println( "S" + i );
+				astm.stopThread();
+				astm.join();
+				while( AsyncStatement.waitingThreads() > 0 /* !astm.DATA_SHARED.isEmpty() /*( 3 * typesCache.length * MAX_BATCH_ROWS )*/ )
+				{
+					try
+					{
+						System.out.print( "H" );
+						Thread.sleep( 500 );
+						System.gc();
+					}
+					catch( InterruptedException ex )
+					{
+						ex.printStackTrace();
+					}
+				}
+			}
+		}
+		for( AsyncStatement async: threads )
+		{
+			if( async.isAlive() )
+			{
+				System.out.println( "Waiting for thread: " + async.getName() );
+				async.join();
+			}
+		}
+	}
+	
+	protected static synchronized boolean cacheLimit()
+	{
+		boolean limit = false;
+		long totalMem = Runtime.getRuntime().totalMemory();
+		if( ( double )totalMem > .75 * MAX_MEM )
+		{
+			long freeMem = Runtime.getRuntime().freeMemory();
+			limit = (double)freeMem < .30 * MAX_MEM;
+			if( limit )
+			{
+				System.out.println( "free: " + freeMem + "/" + MAX_MEM );
+				System.gc();
+			}
+		}
+		return limit;
+	}
+}
