@@ -30,7 +30,6 @@ import pt.evolute.sql.function.SQLFunction;
 import pt.evolute.sql.function.SQLMax;
 import pt.evolute.sql.function.SQLMonth;
 import pt.evolute.sql.function.SQLYear;
-import pt.evolute.textsearch.condition.TSQuery;
 
 public class Operand
 {	
@@ -353,18 +352,6 @@ public class Operand
 		else
 		{
 			return isLike( new Operand( other ) );
-		}
-	}
-	
-	public Expression tsQuery( Object other )
-	{
-		if( other instanceof Operand )
-		{
-			return new Atom( new TSQuery( this, ( Operand ) other ) );
-		}
-		else
-		{
-			return tsQuery( new Operand( other ) );
 		}
 	}
 	
