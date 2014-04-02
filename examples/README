@@ -1,1 +1,4 @@
-sample properties files
+Sample properties files.
+---
+A good way to get connection properties is to use DBVisualizer (http://www.dbvis.com/) to test the connection first.
+
