@@ -27,6 +27,7 @@ public class DriverProvider
 		drivers.put("rmi", "org.objectweb.rmijdbc.Driver");
 		drivers.put("sqlserver", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
 		drivers.put("db2", "com.ibm.db2.jcc.DB2Driver");
+		drivers.put("as400", "com.ibm.as400.access.AS400JDBCDriver");
 		
 		//name parser
 		nameRegex.put("org.postgresql.Driver", "(/+[a-zA-Z0-9_-]+[?])");

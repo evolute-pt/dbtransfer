@@ -21,3 +21,8 @@ download: http://jdbc.postgresql.org
 lib/sqljdbc4.jar
 SQLServer official jdbc driver
 http://msdn.microsoft.com/en-us/sqlserver/aa937724.aspx
+
+lib/jt400.jar
+JTOpen: The Open Source version of the IBM Toolbox for Java
+downlaod: http://jt400.sourceforge.net/
+license: http://opensource.org/licenses/ibmpl.php
