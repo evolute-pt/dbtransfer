@@ -3,7 +3,7 @@ Java Library for MS Access
 http://jackcess.sourceforge.net
 Enables the use of source mdb files on Windows and non-Windows operating systems
 
-lib/mysql-connector-java-5.1.29-bin.jar
+lib/mysql-connector-java-5.1.30-bin.jar
 MySQL jdbc driver
 https://dev.mysql.com/downloads/connector/j/
 
