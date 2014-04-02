@@ -10,5 +10,5 @@ Examples missing!!
 
 ---
 To build the project:
-$ant clean
-$ant jar
+ant clean
+ant jar
