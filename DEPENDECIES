@@ -9,7 +9,8 @@ https://dev.mysql.com/downloads/connector/j/
 
 lib/ojdbc6.jar
 Oracle jdbc driver
-http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html
+licence: http://www.oracle.com/technetwork/licenses/distribution-license-152002.html
+download: http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html
 
 lib/postgresql-9.3-1101.jdbc41.jar
 PostgreSQL jdbc driver
