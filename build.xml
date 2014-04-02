@@ -20,7 +20,9 @@
  
     <target name="compile">
         <mkdir dir="${classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath">
+	   <compilerarg value="-Xlint:deprecation" />
+	</javac>
     </target>
  
     <target name="jar" depends="compile">

@@ -73,18 +73,6 @@ public class LightResultSet2DArray implements Virtual2DArray
 	}
 	
 	@Override
-	public int rowLength()
-	{
-		return columnCount();
-	}
-
-	@Override
-	public int columnLength()
-	{
-		return rowCount();
-	}
-	
-	@Override
 	public int rowCount()
 	{
 		if( rows == -1 )

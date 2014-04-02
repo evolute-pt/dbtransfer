@@ -7,13 +7,7 @@ public interface Virtual2DArray
 	
 	public void set( int row, int col, Object obj );
 	
-	@Deprecated
-	public int rowLength();
-	
 	public int columnCount();
-	
-	@Deprecated
-	public int columnLength();
 	
 	public int rowCount();
 	
