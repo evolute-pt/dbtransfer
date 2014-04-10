@@ -1,4 +1,4 @@
-###DBTransfer
+DBTransfer
 ==========
 
 **DBTransfer** - versatile and fast database transfer tool
