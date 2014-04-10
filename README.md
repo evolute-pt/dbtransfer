@@ -1,7 +1,7 @@
-DBTransfer
+###DBTransfer
 ==========
 
-DBTransfer - versatile and fast database transfer tool
+**DBTransfer** - versatile and fast database transfer tool
 
 ## What is DBTransfer?
 DBTransfer is a multi-platform java tool, that aims to replicate one
