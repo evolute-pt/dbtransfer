@@ -24,4 +24,4 @@ compile it, using:
 
 After this, you have to run the tool, using:
 
-- java -jar dbtransfer.jar <DBTRANSFER.properties>
+- java -jar dbtransfer.jar DBTRANSFER.properties
