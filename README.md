@@ -30,7 +30,7 @@ You have to create a properties file, like the ones in the examples.
 
 ## Sponsors
 This project had the invaluable help of a tool, DBVisualizer, which help
-us test everything and connect to any database.
+us test everything and connect to any database. DBVisualizer uses JDBC, the same framework as DBTransfer, so it helps a lot validating database metadata and testing database connections to use in the properties file.
 
 Our friends at DBVisualizer were very kind to provide to all the
 contributers, a valid DBVisualzer Pro license. Thank you for your
