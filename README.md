@@ -27,3 +27,13 @@ After this, you have to run the tool, using:
 - java -jar dbtransfer.jar DBTRANSFER.properties
 
 You have to create a properties file, like the ones in the examples.
+
+## Sponsors
+This project had the invaluable help of a tool, DBVisualizer, which help
+us test everything and connect to any database.
+
+Our friends at DBVisualizer were very kind to provide to all the
+contributers, a valid DBVisualzer Pro license. Thank you for your
+support!
+
+DBVisualizer - http://www.dbvis.com
