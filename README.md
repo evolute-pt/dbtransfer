@@ -28,6 +28,10 @@ After this, you have to run the tool, using:
 
 You have to create a properties file, like the ones in the examples.
 
+## What needs to be done.. right away!
+Fix the ant compile, and enable Maven on the project. Feel free to help
+out!
+
 ## Sponsors
 This project had the invaluable help of a tool, DBVisualizer, which help
 us test everything and connect to any database. DBVisualizer uses JDBC, the same framework as DBTransfer, so it helps a lot validating database metadata and testing database connections to use in the properties file.
