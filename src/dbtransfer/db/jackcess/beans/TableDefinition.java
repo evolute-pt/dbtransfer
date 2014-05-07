@@ -35,7 +35,7 @@ public class TableDefinition
 	private final List<ForeignKeyDefinition> foreignKeys = new LinkedList<ForeignKeyDefinition>();
 	private final List<ColumnDefinition> columns = new LinkedList<ColumnDefinition>();
 
-	private final Map<Name,ColumnDefinition> columns_map = new HashMap<Name,ColumnDefinition>();
+	private final Map<String,ColumnDefinition> columns_map = new HashMap<String,ColumnDefinition>();
 
 	public TableDefinition( Table t )
 	{
@@ -94,7 +94,7 @@ public class TableDefinition
 			}
 			myCol.isNotNull = false;
 			columns.add( myCol );
-			columns_map.put( myCol.name, myCol );
+			columns_map.put( myCol.name.toString(), myCol );
 		}
 		List<Index> indexes = table.getIndexes();
 		for( Index idx: indexes )

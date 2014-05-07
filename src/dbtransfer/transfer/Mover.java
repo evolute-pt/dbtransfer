@@ -194,7 +194,7 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 				}
 				System.out.println( "S" + i );
 				astm.stopThread();
-				astm.join();
+//				astm.join();
 				while( AsyncStatement.waitingThreads() > 0 /* !astm.DATA_SHARED.isEmpty() /*( 3 * typesCache.length * MAX_BATCH_ROWS )*/ )
 				{
 					try
