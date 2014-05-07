@@ -34,14 +34,12 @@ public class Mover extends Connector implements Constants
 {
 	public static final int MAX_BATCH_ROWS = 1024;
 	
-	public static boolean reorder = false;
-	
 	private final Name TABLES[];
 	private final String SRC_URL;
 	private final String DEST_URL;
 	private final DBConnection CON_SRC;
 	private final DBConnection CON_DEST;
-
+        private final boolean CHECK_DEPS;
 	private final boolean ESCAPE_UNICODE;
 	
 	private static final long MAX_MEM = Runtime.getRuntime().maxMemory();
@@ -66,8 +64,9 @@ public class Mover extends Connector implements Constants
 		CON_DEST = DBConnector.getConnection( DEST_URL, destUser, destPasswd, false );
 System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
 
+                CHECK_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_CHECK_DEPS, "false" ) );
 		List<Name> v = CON_SRC.getTableList();
-		if( false )
+		if( CHECK_DEPS )
 		{
 			System.out.println( "Reordering tables for dependencies (" + v.size() + " tables)" );
 			v = reorder( v );

@@ -39,7 +39,7 @@ public interface Constants
 	public static String DIFF = "DIFF";
 	public static String DIFF_COMMENT = "DIFF.COMMENT";
 
-	public static String TRANSFER_CHECK_DEPS_DESTINATION = "TRANSFER.CHECK_DEPS_DESTINATION";
+	public static String TRANSFER_CHECK_DEPS = "TRANSFER.CHECK_DEPS";
 	
 	public static final String DEBUG = "DEBUG";
 }

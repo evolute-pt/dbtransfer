@@ -31,16 +31,18 @@ public class Main
 		HelperManager.setProperties( props );
 		System.out.println( "BEGIN: " + new java.util.Date() );
 		long start = System.currentTimeMillis();
-		Mover.reorder = "true".equals( props.getProperty( Constants.TRANSFER_CHECK_DEPS_DESTINATION ) );
-		JDBCConnection.debug = "true".equals( props.getProperty( Constants.DEBUG ) );
-		if( "true".equals( props.getProperty( Constants.ANALYSE ) ) )
+		
+                JDBCConnection.debug = "true".equalsIgnoreCase(props.getProperty( Constants.DEBUG ) );
+		if( "true".equalsIgnoreCase(props.getProperty( Constants.ANALYSE ) ) )
 		{
 			System.out.println( "Analysing" );
 			Analyser a = new Analyser( props );
 			a.cloneDB();
 		}
-		if( "true".equals( props.getProperty( Constants.TRANSFER ) ) )
+		if( "true".equalsIgnoreCase(props.getProperty( Constants.TRANSFER ) ) )
 		{
+                    if( !"true".equalsIgnoreCase( props.getProperty( Constants.TRANSFER_CHECK_DEPS ) ) )
+                    {
 			String s = props.getProperty( Constants.TRANSFER_THREADS );
 			try
 			{
@@ -63,14 +65,15 @@ public class Main
 //				ErrorLogger.logException( ex );
 				throw ex.getNextException();
 			}
+                    }
 		}
-		if( "true".equals( props.getProperty( Constants.CONSTRAIN ) ) )
+		if( "true".equalsIgnoreCase( props.getProperty( Constants.CONSTRAIN ) ) )
 		{
 			System.out.println( "Constraining" );
 			Constrainer c = new Constrainer( props );
 			c.constrainDB();
 		}
-		if( "true".equals( props.getProperty( Constants.DIFF ) ) )
+		if( "true".equalsIgnoreCase( props.getProperty( Constants.DIFF ) ) )
 		{
 			System.out.println( "Diffing" );
 			Diff d = new Diff( props );
