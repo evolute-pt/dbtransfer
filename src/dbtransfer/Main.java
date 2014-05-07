@@ -52,19 +52,19 @@ public class Main
 			catch( Exception ex )
 			{
 			}
-			System.out.println( "Transfering" );
-			Mover m = new Mover( props );
-			try
-			{
-				m.moveDB();
-			}
-			catch( SQLException ex )
-			{
-				ex.printStackTrace( System.out );
-				ex.printStackTrace();
+                    }
+                    System.out.println( "Transfering" );
+                    Mover m = new Mover( props );
+                    try
+                    {
+                            m.moveDB();
+                    }
+                    catch( SQLException ex )
+                    {
+                            ex.printStackTrace( System.out );
+                            ex.printStackTrace();
 //				ErrorLogger.logException( ex );
-				throw ex.getNextException();
-			}
+                            throw ex.getNextException();
                     }
 		}
 		if( "true".equalsIgnoreCase( props.getProperty( Constants.CONSTRAIN ) ) )
