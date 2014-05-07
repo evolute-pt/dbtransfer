@@ -55,7 +55,7 @@ auxiliary.show.customizer.message=<message>
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/3">
             <compilation-unit>
                 <package-root>src</package-root>
-                <classpath mode="compile">lib/jackcess-1.2.12.jar:lib/jt400.jar:lib/mysql-connector-java-5.1.30-bin.jar:lib/ojdbc6.jar:lib/postgresql-9.3-1101.jdbc41.jar:lib/sqljdbc4.jar</classpath>
+                <classpath mode="compile">lib/jackcess-1.2.12.jar:lib/jt400.jar:lib/mysql-connector-java-5.1.30-bin.jar:lib/ojdbc6.jar:lib/postgresql-9.3-1101.jdbc41.jar:lib/sqljdbc4.jar:lib/commons-logging-1.1.1.jar</classpath>
                 <source-level>1.6</source-level>
             </compilation-unit>
         </java-data>
