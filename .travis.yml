@@ -1,2 +1,2 @@
 language: java
-ant jar
+install: ant jar
