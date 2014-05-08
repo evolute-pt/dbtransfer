@@ -29,6 +29,7 @@ import dbtransfer.db.beans.PrimaryKeyDefinition;
 import dbtransfer.db.beans.UniqueDefinition;
 import dbtransfer.db.helper.Helper;
 import dbtransfer.db.helper.HelperManager;
+import pt.evolute.arrays.CursorResultSet2DArray;
 
 /**
  *
@@ -136,13 +137,13 @@ public class JDBCConnection implements DBConnection
 		{
 			System.out.println( "SQL: " + sql );
 		}
-		Statement stm = connection.createStatement( ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY );
+		Statement stm = connection.createStatement( ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY );
 		boolean hasResult = stm.execute( sql );
-		LightResultSet2DArray ret = null;
+		Virtual2DArray ret = null;
 		if( hasResult )
 		{
 			ResultSet rs = stm.getResultSet();
-			ret = new LightResultSet2DArray( rs );
+			ret = new CursorResultSet2DArray( rs );
 		}
 		return ret;
 	}

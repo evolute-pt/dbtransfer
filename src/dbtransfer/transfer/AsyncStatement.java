@@ -58,7 +58,6 @@ public class AsyncStatement extends Thread
 		CONN = con;
 		INSERT = insert;
 		setName( "AsyncStatement " + n );
-System.out.print( "Async " + n + " created \n" + INSERT + "\nisRunning? " );
 		synchronized( R_THREADS )
 		{
 			if( R_THREADS.size() >= PARALLEL_THREADS )
@@ -71,6 +70,7 @@ System.out.print( "Async " + n + " created \n" + INSERT + "\nisRunning? " );
 				start();
 			}	
 		}
+System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + isAlive() );
 	}
 	
 	@Override

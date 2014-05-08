@@ -120,8 +120,19 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 		{
 			Virtual2DArray rs = CON_SRC.getFullTable( TABLES[ i ] );
 			System.out.println( "Moving table: " + TABLES[ i ] + " (" + rs.rowCount() + " rows)" );
-//			ResultSet rs = null;
-			if( rs != null && rs.rowCount() > 0 )
+                        boolean rsNotEmpty = rs != null;
+                        if( rsNotEmpty  )
+                        {
+                            try
+                            {
+                                rs.get( 0, 0); 
+                            }
+                            catch( RuntimeException ex )
+                            {
+                                rsNotEmpty = !"ENDOFRESULTSET".equals( ex.getMessage() );
+                            }
+                        }
+			if( rsNotEmpty )
 			{
 				StringBuilder buff = new StringBuilder( "INSERT INTO " );
 				StringBuilder args = new StringBuilder();
@@ -160,8 +171,10 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 				AsyncStatement astm = new AsyncStatement( typesCache, CON_DEST, insert, i, pre, post, tr );
 				threads.add( astm );
 				int rows = 0;
-				for( int row = 0; row < rs.rowCount(); ++row  )
-				{
+                                
+				int row = 0;
+				while( rsNotEmpty )
+                                {
 					for( int j = 0; j < typesCache.length; ++j )
 					{
 						Object data = rs.get( row, j );
@@ -191,6 +204,15 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 							}
 						}
 					}
+                                        ++row;
+                                         try
+                            {
+                                rs.get( 0, row); 
+                            }
+                            catch( RuntimeException ex )
+                            {
+                                rsNotEmpty = !"ENDOFRESULTSET".equals( ex.getMessage() );
+                            }
 				}
 				System.out.println( "S" + i );
 				astm.stopThread();
