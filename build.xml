@@ -44,6 +44,25 @@
         </copy>
     </target>
 
+    <target name="test" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <manifestclasspath property="jar.classpath" jarfile="${basedir}/${ant.project.name}.jar">
+        <classpath refid="classpath"/>
+    </manifestclasspath>
+        <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main-class}"/>
+                <attribute name="Class-path" value="${jar.classpath}" />
+            </manifest>
+        </jar>
+        <mkdir dir="${jar.dir}/lib"/>
+        <copy todir="${jar.dir}/lib">
+            <fileset dir="${lib.dir}">
+                <include name="**/*" />
+            </fileset>
+        </copy>
+    </target>
+
     <target name="run" depends="jar">
        <java fork="true" classname="${main-class}">
           <classpath>
