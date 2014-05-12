@@ -29,7 +29,7 @@ After this, you have to run the tool, using:
 You have to create a properties file, like the ones in the examples.
 
 ## What needs to be done.. right away!
-Fix the ant compile, and enable Maven on the project. Feel free to help
+Improve the output, and enable Maven on the project. Feel free to help
 out!
 
 ## Sponsors
