@@ -20,16 +20,18 @@ the data it self, which is converted to respective data-type.
 ## Downloading and running DBTransfer
 For now you, to run DBTransfer, you need to check out the project, and
 compile it, using:
-- ant jar
+- mvn package
+
+This will create a ./target/dbtransfer-1.0-SNAPSHOT.jar
 
 After this, you have to run the tool, using:
 
-- java -jar dbtransfer.jar _**dbtransfer.properties**_
+- java -jar dbtransfer-1.0-SNAPSHOT.jar  _**dbtransfer.properties**_
 
 You have to create a properties file, like the ones in the examples.
 
 ## What needs to be done.. right away!
-Improve the output, and enable Maven on the project. Feel free to help
+Improve the output, ~~and enable Maven~~ on the project. Feel free to help
 out!
 
 ## Sponsors
