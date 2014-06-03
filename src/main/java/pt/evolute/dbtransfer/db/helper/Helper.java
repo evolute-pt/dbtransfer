@@ -2,6 +2,7 @@ package pt.evolute.dbtransfer.db.helper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import pt.evolute.dbtransfer.db.DBConnection;
 
@@ -39,4 +40,6 @@ public interface Helper
 	public String normalizeDefault(String string);
 
 	public void setPreparedValue(PreparedStatement pStm, int col, Object o, int type) throws SQLException;
+
+    public void setupStatement(Statement stm) throws SQLException;
 }

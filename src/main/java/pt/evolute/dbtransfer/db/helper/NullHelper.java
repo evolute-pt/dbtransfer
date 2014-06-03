@@ -2,6 +2,7 @@ package pt.evolute.dbtransfer.db.helper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -167,4 +168,10 @@ public class NullHelper implements Helper
 			pStm.setObject(col + 1, outputValue( o ), translateType( type ) );
 		}
 	}
+
+        @Override
+    public void setupStatement(Statement stm) 
+            throws SQLException
+    {
+    }
 }

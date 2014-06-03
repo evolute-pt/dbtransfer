@@ -59,13 +59,7 @@ public class LightResultSet2DArray implements Virtual2DArray
 		}
 		return obj;
 	}
-
-	@Override
-	public void set(int row, int col, Object obj)
-	{
-		throw new RuntimeException( "Not implemented yet" );
-	}
-
+        
 	@Override
 	public int columnCount()
 	{
@@ -107,17 +101,4 @@ public class LightResultSet2DArray implements Virtual2DArray
 		}
 		return o;
 	}
-
-	@Override
-	public void deleteRow(int row)
-	{
-		throw new RuntimeException( "Not implemented yet" );
-	}
-
-	@Override
-	public void appendEmptyRow()
-	{
-		throw new RuntimeException( "Not implemented yet" );
-	}
-
 }

@@ -11,7 +11,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import pt.evolute.utils.arrays.LightResultSet2DArray;
 import pt.evolute.utils.arrays.Virtual2DArray;
 import pt.evolute.utils.db.Connector;
 import pt.evolute.utils.dbmodel.DBTable;
@@ -133,6 +132,7 @@ public class JDBCConnection implements DBConnection
 			System.out.println( "SQL: " + sql );
 		}
 		Statement stm = connection.createStatement( ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY );
+                helper.setupStatement( stm );
 		boolean hasResult = stm.execute( sql );
 		Virtual2DArray ret = null;
 		if( hasResult )
@@ -278,6 +278,11 @@ System.out.println( "FK : " + fkName );
 	@Override
 	public int getRowCount( Name table) throws Exception 
 	{
-		return ( ( Number )executeQuery( "SELECT COUNT(*) FROM `" + table.originalName + "`" ).get( 0, 0 ) ).intValue();
+            int count = ( ( Number )executeQuery( "SELECT COUNT(*) FROM `" + table.originalName + "`" ).get( 0, 0 ) ).intValue();
+            if( debug )
+            {
+                    System.out.println( "COUNT: " + table.originalName + " " + count + " rows." );
+            }
+            return count;
 	}
 }

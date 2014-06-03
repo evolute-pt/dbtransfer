@@ -1,6 +1,7 @@
 package pt.evolute.dbtransfer.db.helper;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
@@ -265,4 +266,11 @@ public class MySQLServerHelper extends NullHelper
 	{
 		return MYSQL_NORMALIZE_BIT_BOOLEAN + " - convert BIT columns into BOOLEAN";
 	}
+        
+        @Override
+        public void setupStatement(Statement stm) 
+           throws SQLException
+    {
+        stm.setFetchSize(Integer.MIN_VALUE);
+    }
 }

@@ -18,6 +18,7 @@ import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
+import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
 
 
 /**
@@ -68,25 +69,34 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 		TABLES = v.toArray( new Name[ v.size() ] );
 	}
 	
-	private List<Name> reorder(List<Name> v) throws Exception 
+	private List<Name> reorder(List<Name> inputList) throws Exception 
 	{
-		Map<Name,Name> m = new HashMap<Name,Name>();
+		Map<Name,Name> noDepsTablesMap = new HashMap<Name,Name>();
 		List<Name> deps = new ArrayList<Name>();
 		List<Name> list = new ArrayList<Name>();
-		while( !v.isEmpty() && !deps.isEmpty() )
+		while( !inputList.isEmpty() || !deps.isEmpty() )
 		{
 			if( !deps.isEmpty() )
 			{
-				v.addAll( deps );
+				inputList.addAll( deps );
 			}
-			for( Name n: v )
+			for( Name n: inputList )
 			{
+                            if( JDBCConnection.debug )
+                            {
+                                System.out.println( "Testing: " + n.originalName );
+                            }
+                            
 				List<ForeignKeyDefinition> fks = CON_DEST.getForeignKeyList( n );
 				boolean ok = true;
 				for( ForeignKeyDefinition fk: fks )
 				{
-					if( !m.containsKey( fk.columns.get( 0 ).referencedTable ) )
+					if( !noDepsTablesMap.containsKey( fk.columns.get( 0 ).referencedTable ) )
 					{
+                                            if( JDBCConnection.debug )
+                            {
+                                System.out.println( "Depends: " + fk.columns.get( 0 ).referencedTable.originalName );
+                            }
 						deps.add( n );
 						ok = false;
 						break;
@@ -95,9 +105,10 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 				if( ok )
 				{
 					list.add( n );
+                                        noDepsTablesMap.put( n, n );
 				}
 			}
-			v.clear();
+			inputList.clear();
 		}
 		System.out.println( "Reordered (" + list.size() + " tables)" );
 		return list;
@@ -113,8 +124,8 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 		for( int i = 0; i < TABLES.length; ++i )
 		{
 			Virtual2DArray rs = CON_SRC.getFullTable( TABLES[ i ] );
-			System.out.println( "Moving table: " + TABLES[ i ] + " (" + rs.rowCount() + " rows)" );
-                        boolean rsNotEmpty = rs != null && rs.rowCount() > 0;
+			System.out.println( "Moving table: " + TABLES[ i ] + " (" + /*rs.rowCount()*/ "NA" + " rows)" );
+                        boolean rsNotEmpty = rs != null;
                         if( rsNotEmpty  )
                         {
                             try
