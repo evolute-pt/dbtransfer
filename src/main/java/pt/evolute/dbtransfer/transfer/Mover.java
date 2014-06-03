@@ -114,7 +114,7 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 		{
 			Virtual2DArray rs = CON_SRC.getFullTable( TABLES[ i ] );
 			System.out.println( "Moving table: " + TABLES[ i ] + " (" + rs.rowCount() + " rows)" );
-                        boolean rsNotEmpty = rs != null;
+                        boolean rsNotEmpty = rs != null && rs.rowCount() > 0;
                         if( rsNotEmpty  )
                         {
                             try

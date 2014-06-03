@@ -278,6 +278,6 @@ System.out.println( "FK : " + fkName );
 	@Override
 	public int getRowCount( Name table) throws Exception 
 	{
-		return ( ( Number )executeQuery( "SELECT COUNT(*) FROM \"" + table.originalName + "\"" ).get( 0, 0 ) ).intValue();
+		return ( ( Number )executeQuery( "SELECT COUNT(*) FROM `" + table.originalName + "`" ).get( 0, 0 ) ).intValue();
 	}
 }
