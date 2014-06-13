@@ -81,7 +81,7 @@ public class NullHelper implements Helper
 		}
 		catch(SQLException ex)
 		{
-			if(ex.getMessage().indexOf("ultiple") == -1)
+			if(ex.getMessage().contains("ultiple"))
 			{
 				throw ex;
 			}
@@ -103,7 +103,7 @@ public class NullHelper implements Helper
 		}
 		catch(SQLException ex)
 		{
-			if(ex.getMessage().indexOf("ultiple") == -1)
+			if(ex.getMessage().contains("ultiple"))
 			{
 				System.out.println("EX: " + table + "-" + column + ": " + ex.getMessage());
 				//							throw ex;

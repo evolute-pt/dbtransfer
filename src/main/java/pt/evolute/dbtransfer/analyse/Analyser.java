@@ -27,7 +27,9 @@ public class Analyser implements Constants
 	private final Helper SRC_TR;
 	private final Helper DEST_TR;
 	
-	/** Creates a new instance of Analyser */
+	/** Creates a new instance of Analyser
+     * @param props
+     * @throws java.lang.Exception */
 	public Analyser( Properties props )
 		throws Exception
 	{
@@ -53,10 +55,6 @@ public class Analyser implements Constants
 		List<String> v2 = new LinkedList<String>();
 		for( int i = 0; i < TABLES.length; ++i )
 		{
-//			if( !TABLES[ i ].toLowerCase().equals( "dados_ficha_clinic" ) )
-//			{
-//				continue;
-//			}
 			List<ColumnDefinition> list = CON_SRC.getColumnList( TABLES[ i ] );
 			StringBuilder buff = new StringBuilder( "CREATE TABLE " );
 			buff.append( TABLES[ i ].saneName );
@@ -97,7 +95,7 @@ public class Analyser implements Constants
 		{
 			try
 			{
-				destCon.executeQuery( v2.get( i ).toString() );
+				destCon.executeQuery( v2.get( i ) );
 			}
 			catch( Exception ex )
 			{
@@ -111,8 +109,6 @@ System.out.println( "T: " + v.get( i ) );
 	
 	private String translate( String type, Integer size )
 	{
-//		String name = SQL_TYPES.get( type );
-//		return name == null? type: name;
 		return DEST_TR.outputType( SRC_TR.normalizedType( type ), size );
 	}
 }

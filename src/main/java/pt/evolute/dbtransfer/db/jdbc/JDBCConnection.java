@@ -39,8 +39,10 @@ public class JDBCConnection implements DBConnection
 	private final String schema;
 	private final boolean ignoreEmpty;
 	
+        private final Map<String,List<ColumnDefinition>> MAP_TABLE_COLUMNS = new HashMap<String,List<ColumnDefinition>>();
+        
 	private final Helper helper;
-
+        
 	public JDBCConnection( String url, String user, String pass, boolean onlyNotEmpty )
 			throws Exception
 	{
@@ -60,13 +62,13 @@ public class JDBCConnection implements DBConnection
 		List<Name> v = new LinkedList<Name>();
 		while( rs.next() )
 		{
-			String table = rs.getString( 3 );
-			Name n = new Name( table );
-			if( ignoreEmpty && getRowCount( n ) == 0 )
-			{
-				continue;
-			}
-			v.add( n );
+                    String table = rs.getString( 3 );
+                    Name n = new Name( table );
+                    if( ignoreEmpty && getRowCount( n ) == 0 )
+                    {
+                            continue;
+                    }
+                    v.add( n );
 		}
 		rs.close();
 		return v;
@@ -74,153 +76,162 @@ public class JDBCConnection implements DBConnection
 
 	public List<ColumnDefinition> getColumnList( Name table ) throws Exception
 	{
-		DatabaseMetaData rsmd = connection.getMetaData();
-		ResultSet rs = rsmd.getColumns( catalog, schema, table.originalName, null );
-		List<ColumnDefinition> list = new LinkedList<ColumnDefinition>();
-		Map<String,ColumnDefinition> cols = new HashMap<String, ColumnDefinition>();
-//		boolean quit = false;
-		while( rs.next() )
-		{
-			Name name = new Name( rs.getString( 4 ) );
-//			String name = StringPlainer.convertString( rs.getString( 4 ) );
-//			if( "nag_calendario".equalsIgnoreCase( table ) )
-//			{
-//				System.out.println( "T: " + table + " <" + rs.getString( 4 ) + ">  PLAIN: <" + name + ">" );
-//				quit = true;
-//			}
-//			else
-//			{
-//				if( quit )
-//				{
-//					System.exit( 0 );
-//				}
-//			}
-			if( !cols.containsKey( name.saneName ) )
-			{
-				ColumnDefinition col = new ColumnDefinition();
-				col.name = name;
-				col.sqlTypeName = rs.getString( 6 );
-				col.sqlType = rs.getInt( 5 );
-				if( rs.getInt( 5 ) == Types.CHAR
-						|| rs.getInt( 5 ) == Types.LONGVARCHAR
-						|| rs.getInt( 5 ) == Types.VARCHAR
-						|| rs.getInt( 5 ) == Types.NCHAR
-						|| rs.getInt( 5 ) == Types.LONGNVARCHAR
-						|| rs.getInt( 5 ) == Types.NVARCHAR )
-				{
-					col.sqlSize = rs.getInt( 7 );
-				}
-				col.defaultValue = helper.normalizeDefault( rs.getString( 13 ) );
-				col.isNotNull = "NO".equals( rs.getString( 18 ).trim() );
-				cols.put( col.name.saneName, col );
-				list.add( col );
-			}
-			else
-			{
-				System.out.println( "Ignoring duplicate: " + table.originalName + " - " + name );
-				new Exception( "Ignoring duplicate: " + table.originalName + " - " + name ).printStackTrace();;
-			}
-		}
-		rs.close();
-		return list;
+            List<ColumnDefinition> list = MAP_TABLE_COLUMNS.get( table.originalName );
+            if( list == null )
+            {
+                DatabaseMetaData rsmd = connection.getMetaData();
+                ResultSet rs = rsmd.getColumns( catalog, schema, table.originalName, null );
+                list = new LinkedList<ColumnDefinition>();
+                Map<String,ColumnDefinition> cols = new HashMap<String, ColumnDefinition>();
+    //		boolean quit = false;
+                System.out.println( "COL FOR TABLE: <" + table.originalName + ">" );
+                while( rs.next() )
+                {
+                    Name name = new Name( rs.getString( 4 ) );
+                    System.out.println( "COL: " + name.originalName );
+    //			String name = StringPlainer.convertString( rs.getString( 4 ) );
+    //			if( "nag_calendario".equalsIgnoreCase( table ) )
+    //			{
+    //				System.out.println( "T: " + table + " <" + rs.getString( 4 ) + ">  PLAIN: <" + name + ">" );
+    //				quit = true;
+    //			}
+    //			else
+    //			{
+    //				if( quit )
+    //				{
+    //					System.exit( 0 );
+    //				}
+    //			}
+                    if( !cols.containsKey( name.saneName ) )
+                    {
+                        ColumnDefinition col = new ColumnDefinition();
+                        col.name = name;
+                        col.sqlTypeName = rs.getString( 6 );
+                        col.sqlType = rs.getInt( 5 );
+                        if( rs.getInt( 5 ) == Types.CHAR
+                                        || rs.getInt( 5 ) == Types.LONGVARCHAR
+                                        || rs.getInt( 5 ) == Types.VARCHAR
+                                        || rs.getInt( 5 ) == Types.NCHAR
+                                        || rs.getInt( 5 ) == Types.LONGNVARCHAR
+                                        || rs.getInt( 5 ) == Types.NVARCHAR )
+                        {
+                                col.sqlSize = rs.getInt( 7 );
+                        }
+                        col.defaultValue = helper.normalizeDefault( rs.getString( 13 ) );
+                        col.isNotNull = "NO".equals( rs.getString( 18 ).trim() );
+                        cols.put( col.name.saneName, col );
+                        list.add( col );
+                        System.out.println( "Adding col: " + table.originalName + " - " + name );
+                    }
+                    else
+                    {
+                        System.out.println( "Ignoring duplicate: " + table.originalName + " - " + name );
+                        new Exception( "Ignoring duplicate: " + table.originalName + " - " + name ).printStackTrace();;
+                    }
+                }
+                rs.close();
+                MAP_TABLE_COLUMNS.put( table.originalName, list );
+            }
+            System.out.println( "COLSS size: " + list.size() );
+            return list;
 	}
 
 	public Virtual2DArray executeQuery(String sql) throws Exception
 	{
-		if( debug )
-		{
-			System.out.println( "SQL: " + sql );
-		}
-		Statement stm = connection.createStatement( ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY );
-                helper.setupStatement( stm );
-		boolean hasResult = stm.execute( sql );
-		Virtual2DArray ret = null;
-		if( hasResult )
-		{
-			ResultSet rs = stm.getResultSet();
-			ret = new CursorResultSet2DArray( rs );
-		}
-		return ret;
+            if( debug )
+            {
+                System.out.println( "SQL: " + sql );
+            }
+            Statement stm = connection.createStatement( ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY );
+            helper.setupStatement( stm );
+            boolean hasResult = stm.execute( sql );
+            Virtual2DArray ret = null;
+            if( hasResult )
+            {
+                ResultSet rs = stm.getResultSet();
+                ret = new CursorResultSet2DArray( rs );
+            }
+            return ret;
 	}
 
 	public PrimaryKeyDefinition getPrimaryKey( Name table) throws Exception
 	{
-		PrimaryKeyDefinition pk = new PrimaryKeyDefinition();
-		pk.name = table + "_pk";
-		DatabaseMetaData rsmd = connection.getMetaData();
-		ResultSet rs = rsmd.getPrimaryKeys( catalog, schema, table.originalName );
-		while( rs.next() )
-		{
-			ColumnDefinition col = new ColumnDefinition();
-			col.name = new Name( rs.getString( 4 ) );
-			ResultSet rsC = rsmd.getColumns( catalog, schema, table.originalName, col.name.originalName );
-			rsC.next();
-			col.sqlTypeName = rsC.getString( 6 );
-			if( rsC.getInt( 5 ) == Types.CHAR
-					|| rsC.getInt( 5 ) == Types.LONGVARCHAR
-					|| rsC.getInt( 5 ) == Types.VARCHAR
-					|| rsC.getInt( 5 ) == Types.NCHAR
-					|| rsC.getInt( 5 ) == Types.LONGNVARCHAR
-					|| rsC.getInt( 5 ) == Types.NVARCHAR )
-			{
-				col.sqlSize = rsC.getInt( 7 );
-			}
-			col.defaultValue = rsC.getString( 13 );
-			col.isNotNull = "NO".equals( rsC.getString( 18 ).trim() );
-			rsC.close();
-			pk.columns.add( col );
-		}
-		rs.close();
-		return pk;
+            PrimaryKeyDefinition pk = new PrimaryKeyDefinition();
+            pk.name = table + "_pk";
+            DatabaseMetaData rsmd = connection.getMetaData();
+            ResultSet rs = rsmd.getPrimaryKeys( catalog, schema, table.originalName );
+            while( rs.next() )
+            {
+                ColumnDefinition col = new ColumnDefinition();
+                col.name = new Name( rs.getString( 4 ) );
+                ResultSet rsC = rsmd.getColumns( catalog, schema, table.originalName, col.name.originalName );
+                rsC.next();
+                col.sqlTypeName = rsC.getString( 6 );
+                if( rsC.getInt( 5 ) == Types.CHAR
+                                || rsC.getInt( 5 ) == Types.LONGVARCHAR
+                                || rsC.getInt( 5 ) == Types.VARCHAR
+                                || rsC.getInt( 5 ) == Types.NCHAR
+                                || rsC.getInt( 5 ) == Types.LONGNVARCHAR
+                                || rsC.getInt( 5 ) == Types.NVARCHAR )
+                {
+                    col.sqlSize = rsC.getInt( 7 );
+                }
+                col.defaultValue = rsC.getString( 13 );
+                col.isNotNull = "NO".equals( rsC.getString( 18 ).trim() );
+                rsC.close();
+                pk.columns.add( col );
+            }
+            rs.close();
+            return pk;
 	}
 
 	public List<ForeignKeyDefinition> getForeignKeyList(Name table) throws Exception
 	{
-		DatabaseMetaData rsmd = connection.getMetaData();
-		System.out.println( "getting FKs: " + connection.getCatalog() + "/" + schema + "/" + table.originalName + "/" );
-		ResultSet rs = rsmd.getImportedKeys( catalog, schema, table.originalName );
-		List<ForeignKeyDefinition> list = new LinkedList<ForeignKeyDefinition>();
-		Map<String,ForeignKeyDefinition> fks = new HashMap<String, ForeignKeyDefinition>();
-		while( rs.next() )
-		{
-			String fkName = rs.getString( 12 );
+            DatabaseMetaData rsmd = connection.getMetaData();
+            System.out.println( "getting FKs: " + connection.getCatalog() + "/" + schema + "/" + table.originalName + "/" );
+            ResultSet rs = rsmd.getImportedKeys( catalog, schema, table.originalName );
+            List<ForeignKeyDefinition> list = new LinkedList<ForeignKeyDefinition>();
+            Map<String,ForeignKeyDefinition> fks = new HashMap<String, ForeignKeyDefinition>();
+            while( rs.next() )
+            {
+                String fkName = rs.getString( 12 );
 System.out.println( "FK : " + fkName );
-			ForeignKeyDefinition fk = fks.get( fkName );
-			if( fk == null )
-			{
-				fk = new ForeignKeyDefinition( fkName, table );
-				fks.put( fkName, fk );
-			}
-			ColumnDefinition col = new ColumnDefinition();
-			col.referencedTable = new Name( rs.getString( 3 ) );
-			col.referencedColumn = new Name( rs.getString( 4 ) );
-			col.name = new Name( rs.getString( 8 ) );
-			ResultSet rsC = rsmd.getColumns( catalog, schema, table.originalName, col.name.originalName );
-			if( rsC.next() )
-			{
-				col.sqlTypeName = rsC.getString( 6 );
-				if( rsC.getInt( 5 ) == Types.CHAR
-						|| rsC.getInt( 5 ) == Types.LONGVARCHAR
-						|| rsC.getInt( 5 ) == Types.VARCHAR
-						|| rsC.getInt( 5 ) == Types.NCHAR
-						|| rsC.getInt( 5 ) == Types.LONGNVARCHAR
-						|| rsC.getInt( 5 ) == Types.NVARCHAR )
-				{
-					col.sqlSize = rsC.getInt( 7 );
-				}
-				col.defaultValue = rsC.getString( 13 );
-				col.isNotNull = "NO".equals( rsC.getString( 18 ).trim() );
-				rsC.close();
-			}
-			else
-			{
-				new Exception( "Can't find column for fk - " + fk.name + "/ col " + col.name ).printStackTrace();
-			}
-			fk.columns.add( col );
-			list.add( fk );
-		}
-		rs.close();
-		return list;
+                ForeignKeyDefinition fk = fks.get( fkName );
+                if( fk == null )
+                {
+                        fk = new ForeignKeyDefinition( fkName, table );
+                        fks.put( fkName, fk );
+                }
+                ColumnDefinition col = new ColumnDefinition();
+                col.referencedTable = new Name( rs.getString( 3 ) );
+                col.referencedColumn = new Name( rs.getString( 4 ) );
+                col.name = new Name( rs.getString( 8 ) );
+                ResultSet rsC = rsmd.getColumns( catalog, schema, table.originalName, col.name.originalName );
+                if( rsC.next() )
+                {
+                    col.sqlTypeName = rsC.getString( 6 );
+                    if( rsC.getInt( 5 ) == Types.CHAR
+                                    || rsC.getInt( 5 ) == Types.LONGVARCHAR
+                                    || rsC.getInt( 5 ) == Types.VARCHAR
+                                    || rsC.getInt( 5 ) == Types.NCHAR
+                                    || rsC.getInt( 5 ) == Types.LONGNVARCHAR
+                                    || rsC.getInt( 5 ) == Types.NVARCHAR )
+                    {
+                            col.sqlSize = rsC.getInt( 7 );
+                    }
+                    col.defaultValue = rsC.getString( 13 );
+                    col.isNotNull = "NO".equals( rsC.getString( 18 ).trim() );
+                    rsC.close();
+                }
+                else
+                {
+                    new Exception( "Can't find column for fk - " + fk.name + "/ col " + col.name ).printStackTrace();
+                }
+                fk.columns.add( col );
+                list.add( fk );
+            }
+            rs.close();
+            return list;
 	}
 
 	public Virtual2DArray getFullTable( Name table ) throws Exception
@@ -251,38 +262,43 @@ System.out.println( "FK : " + fkName );
 	public List<UniqueDefinition> getUniqueList( Name table )
 		throws Exception
 	{
-		DatabaseMetaData rsmd = connection.getMetaData();
-		ResultSet rs = rsmd.getIndexInfo( catalog, schema, table.originalName, true, false );
-		List<UniqueDefinition> list = new LinkedList<UniqueDefinition>();
-		UniqueDefinition lastUniq = null;
-		while( rs.next() )
-		{
-			if( rs.getString( 6 ) != null && rs.getString( 9 ) != null )
-			{
-				if( lastUniq == null || !lastUniq.name.equals( rs.getString( 6 ) ) )
-				{
-					lastUniq = new UniqueDefinition( rs.getString( 6 ), table );
-					list.add( lastUniq );
-				}
-				lastUniq.columns.add( rs.getString( 9 ) );
-			}
-			else
-			{
-				System.out.println( "Discarding index: " + rs.getString( 6 ) );
-			}
-		}
-		rs.close();
-		return list;
+            DatabaseMetaData rsmd = connection.getMetaData();
+            ResultSet rs = rsmd.getIndexInfo( catalog, schema, table.originalName, true, false );
+            List<UniqueDefinition> list = new LinkedList<UniqueDefinition>();
+            UniqueDefinition lastUniq = null;
+            while( rs.next() )
+            {
+                if( rs.getString( 6 ) != null && rs.getString( 9 ) != null )
+                {
+                    if( lastUniq == null || !lastUniq.name.equals( rs.getString( 6 ) ) )
+                    {
+                        lastUniq = new UniqueDefinition( rs.getString( 6 ), table );
+                        list.add( lastUniq );
+                    }
+                    lastUniq.columns.add( rs.getString( 9 ) );
+                }
+                else
+                {
+                    System.out.println( "Discarding index: " + rs.getString( 6 ) );
+                }
+            }
+            rs.close();
+            return list;
 	}
 
 	@Override
 	public int getRowCount( Name table) throws Exception 
 	{
-            int count = ( ( Number )executeQuery( "SELECT COUNT(*) FROM `" + table.originalName + "`" ).get( 0, 0 ) ).intValue();
+            int count = ( ( Number )executeQuery( "SELECT COUNT(*) FROM " + table.originalName ).get( 0, 0 ) ).intValue();
             if( debug )
             {
                     System.out.println( "COUNT: " + table.originalName + " " + count + " rows." );
             }
             return count;
 	}
+
+    public Helper getHelper()
+    {
+        return helper;
+    }
 }

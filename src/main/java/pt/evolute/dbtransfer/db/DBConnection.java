@@ -2,14 +2,14 @@ package pt.evolute.dbtransfer.db;
 
 import java.sql.PreparedStatement;
 import java.util.List;
-
-import pt.evolute.utils.arrays.Virtual2DArray;
-import pt.evolute.utils.dbmodel.DBTable;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.beans.PrimaryKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.UniqueDefinition;
+import pt.evolute.dbtransfer.db.helper.Helper;
+import pt.evolute.utils.arrays.Virtual2DArray;
+import pt.evolute.utils.dbmodel.DBTable;
 
 /**
  *
@@ -46,4 +46,6 @@ public interface DBConnection
 	
 	public int getRowCount(Name table)
 			throws Exception;
+        
+        public Helper getHelper();
 }

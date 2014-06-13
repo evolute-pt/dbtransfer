@@ -110,7 +110,7 @@ public class MySQLServerHelper extends NullHelper
 //		name = StringPlainer.convertString( name );
 		if( RESERVED.containsKey( name ) )
 		{
-			name = "\"" + name + "\"";
+			name = "`" + name + "`";
 		}
 		return name;
 	}
@@ -145,7 +145,7 @@ public class MySQLServerHelper extends NullHelper
 			}
 			catch(SQLException ex)
 			{
-				if(ex.getMessage().indexOf("ultiple") == -1)
+				if( ex.getMessage().contains("ultiple") )
 				{
 					throw ex;
 				}
@@ -251,6 +251,7 @@ public class MySQLServerHelper extends NullHelper
 		return pType;
 	}
 	
+        @Override
 	public String normalizeDefault( String str )
 	{
 		String norm = NORMALIZE_DEFAULTS.get( str );

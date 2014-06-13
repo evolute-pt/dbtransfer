@@ -249,6 +249,7 @@ public class PostgreSQLServerHelper extends NullHelper
 		return pType;
 	}
 	
+        @Override
 	public String normalizeDefault( String str )
 	{
 		String norm = NORMALIZE_DEFAULTS.get( str );

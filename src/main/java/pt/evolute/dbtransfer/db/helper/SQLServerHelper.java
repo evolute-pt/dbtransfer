@@ -140,6 +140,7 @@ public class SQLServerHelper extends NullHelper
 		return "SET IDENTITY_INSERT " + table + " OFF;";
 	}
 	
+        @Override
 	public void setDefaultValue( DBConnection con, String table, String typeName, String column, String value )
 		throws Exception
 	{
@@ -170,6 +171,7 @@ public class SQLServerHelper extends NullHelper
 		}
 	}
 	
+        @Override
 	public void setNotNull( DBConnection con, String table, String typeName, String column, Integer size )
 		throws Exception
 	{
@@ -198,7 +200,7 @@ public class SQLServerHelper extends NullHelper
 			catch(SQLException ex)
 			{
 				System.out.println("C: " + buff);
-				if(ex.getMessage().indexOf("ultiple") == -1)
+				if( ex.getMessage().contains("ultiple") )
 				{
 					System.out.println("EX: " + table + "-" + column + ": " + ex.getMessage());
 					//							throw ex;
@@ -227,6 +229,7 @@ public class SQLServerHelper extends NullHelper
 		return value;
 	}
 	
+        @Override
 	public String normalizeDefault( String str )
 	{
 		String norm = str;
