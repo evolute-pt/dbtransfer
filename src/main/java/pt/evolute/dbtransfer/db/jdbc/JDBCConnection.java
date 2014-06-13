@@ -71,11 +71,6 @@ public class JDBCConnection implements DBConnection
                             continue;
                     }
                     v.add( n );
-                    /* REMOVE!!!! */
-                    if( !v.isEmpty() )
-                    {
-                        break;
-                    }
 		}
 		rs.close();
 		return v;
