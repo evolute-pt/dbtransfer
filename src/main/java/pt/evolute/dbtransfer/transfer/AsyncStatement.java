@@ -242,4 +242,14 @@ System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + is
     {
         return R_THREADS;
     }
+
+    public int getSharedRowsSize() 
+    {
+        return DATA_SHARED.size() / colTypes.length;
+    }
+    
+    public int getPrivateRowsSize() 
+    {
+        return PRIVATE_DATA.size() / colTypes.length;
+    }
 }

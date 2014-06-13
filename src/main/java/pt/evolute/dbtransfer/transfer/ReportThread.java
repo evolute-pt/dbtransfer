@@ -50,7 +50,10 @@ public class ReportThread extends Thread
             for( AsyncStatement as: threads )
             {
                 System.out.println( "WRITE: id: " + as.getName() + " rows: " 
-                        + as.getAndResetWriteRows() + " in " + SLEEP_TIME_MS + "ms sleeping: " + as.isSleeping() );
+                        + as.getAndResetWriteRows() + " in " + SLEEP_TIME_MS + "ms " 
+                        + ( as.isSleeping()? "sleeping!": "" )
+                        + " shared rows: " + as.getSharedRowsSize()
+                        + " private rows: " + as.getPrivateRowsSize());
             }
             try
             {

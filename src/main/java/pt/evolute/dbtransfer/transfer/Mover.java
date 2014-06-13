@@ -273,7 +273,8 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
             limit = (double)freeMem < .30 * MAX_MEM;
             if( limit )
             {
-                System.out.println( "free: " + freeMem / (1024*1024) + "/" + MAX_MEM / (1024*1024) + "MB" );
+                System.out.println( "free: " + freeMem / (1024*1024) 
+                        + "/" + MAX_MEM / (1024*1024) + "MB" );
                 System.gc();
             }
         }
