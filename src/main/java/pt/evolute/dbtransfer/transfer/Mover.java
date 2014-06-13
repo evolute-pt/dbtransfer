@@ -40,79 +40,80 @@ public class Mover extends Connector implements Constants
 
     private static final long MAX_MEM = Runtime.getRuntime().maxMemory();
 
+    private boolean sleeping = false;
+    private int readRows = 0;
 //	private static int oom = 0;
 
     /** Creates a new instance of Mover */
     public Mover( Properties props )
             throws Exception
     {
-            SRC_URL = props.getProperty( URL_DB_SOURCE );
-            ESCAPE_UNICODE = "true".equals( props.getProperty( TRANSFER_ESCAPE_UNICODE ) );
-            String srcUser = props.getProperty( USER_DB_SOURCE );
-            String srcPasswd = props.getProperty( PASSWORD_DB_SOURCE );
-            boolean ignoreEmpty = Boolean.parseBoolean( props.getProperty( ONLY_NOT_EMPTY, "false" ) );
+        SRC_URL = props.getProperty( URL_DB_SOURCE );
+        ESCAPE_UNICODE = "true".equals( props.getProperty( TRANSFER_ESCAPE_UNICODE ) );
+        String srcUser = props.getProperty( USER_DB_SOURCE );
+        String srcPasswd = props.getProperty( PASSWORD_DB_SOURCE );
+        boolean ignoreEmpty = Boolean.parseBoolean( props.getProperty( ONLY_NOT_EMPTY, "false" ) );
 
-            CON_SRC = DBConnector.getConnection( SRC_URL, srcUser, srcPasswd, ignoreEmpty );
+        CON_SRC = DBConnector.getConnection( SRC_URL, srcUser, srcPasswd, ignoreEmpty );
 
-            DEST_URL = props.getProperty( URL_DB_DESTINATION );
-            String destUser = props.getProperty( USER_DB_DESTINATION );
-            String destPasswd = props.getProperty( PASSWORD_DB_DESTINATION );
-            CON_DEST = DBConnector.getConnection( DEST_URL, destUser, destPasswd, false );
+        DEST_URL = props.getProperty( URL_DB_DESTINATION );
+        String destUser = props.getProperty( USER_DB_DESTINATION );
+        String destPasswd = props.getProperty( PASSWORD_DB_DESTINATION );
+        CON_DEST = DBConnector.getConnection( DEST_URL, destUser, destPasswd, false );
 System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
 
-            CHECK_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_CHECK_DEPS, "false" ) );
-            List<Name> v = CON_SRC.getTableList();
-            if( CHECK_DEPS )
-            {
-                    System.out.println( "Reordering tables for dependencies (" + v.size() + " tables)" );
-                    v = reorder( v );
-            }
-            TABLES = v.toArray( new Name[ v.size() ] );
+        CHECK_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_CHECK_DEPS, "false" ) );
+        List<Name> v = CON_SRC.getTableList();
+        if( CHECK_DEPS )
+        {
+            System.out.println( "Reordering tables for dependencies (" + v.size() + " tables)" );
+            v = reorder( v );
+        }
+        TABLES = v.toArray( new Name[ v.size() ] );
     }
 
     private List<Name> reorder(List<Name> inputList) throws Exception 
     {
-            Map<Name,Name> noDepsTablesMap = new HashMap<Name,Name>();
-            List<Name> deps = new ArrayList<Name>();
-            List<Name> list = new ArrayList<Name>();
-            while( !inputList.isEmpty() || !deps.isEmpty() )
+        Map<Name,Name> noDepsTablesMap = new HashMap<Name,Name>();
+        List<Name> deps = new ArrayList<Name>();
+        List<Name> list = new ArrayList<Name>();
+        while( !inputList.isEmpty() || !deps.isEmpty() )
+        {
+            if( !deps.isEmpty() )
             {
-                    if( !deps.isEmpty() )
-                    {
-                            inputList.addAll( deps );
-                    }
-                    for( Name n: inputList )
+                inputList.addAll( deps );
+            }
+            for( Name n: inputList )
+            {
+                if( JDBCConnection.debug )
+                {
+                    System.out.println( "Testing: " + n.originalName );
+                }
+                List<ForeignKeyDefinition> fks = CON_DEST.getForeignKeyList( n );
+                boolean ok = true;
+                for( ForeignKeyDefinition fk: fks )
+                {
+                    if( !noDepsTablesMap.containsKey( fk.columns.get( 0 ).referencedTable ) )
                     {
                         if( JDBCConnection.debug )
                         {
-                            System.out.println( "Testing: " + n.originalName );
-                        }
-
-                            List<ForeignKeyDefinition> fks = CON_DEST.getForeignKeyList( n );
-                            boolean ok = true;
-                            for( ForeignKeyDefinition fk: fks )
-                            {
-                                    if( !noDepsTablesMap.containsKey( fk.columns.get( 0 ).referencedTable ) )
-                                    {
-                                        if( JDBCConnection.debug )
-                        {
                             System.out.println( "Depends: " + fk.columns.get( 0 ).referencedTable.originalName );
                         }
-                                            deps.add( n );
-                                            ok = false;
-                                            break;
-                                    }
-                            }
-                            if( ok )
-                            {
-                                    list.add( n );
-                                    noDepsTablesMap.put( n, n );
-                            }
+                        deps.add( n );
+                        ok = false;
+                        break;
                     }
-                    inputList.clear();
+                }
+                if( ok )
+                {
+                    list.add( n );
+                    noDepsTablesMap.put( n, n );
+                }
             }
-            System.out.println( "Reordered (" + list.size() + " tables)" );
-            return list;
+            inputList.clear();
+        }
+        System.out.println( "Reordered (" + list.size() + " tables)" );
+        return list;
     }
 
     private static boolean testRow( Virtual2DArray array, int row )
@@ -136,6 +137,10 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
         final List<Object> TEMP = new LinkedList<Object>();
         List<AsyncStatement> threads = new LinkedList<AsyncStatement>();
         Helper tr = HelperManager.getTranslator( DEST_URL );
+        
+        ReportThread rt = new ReportThread( this, AsyncStatement.getRunningThreads() );
+        rt.start();
+        
         for( int i = 0; i < TABLES.length; ++i )
         {
             Virtual2DArray rs = CON_SRC.getFullTable( TABLES[ i ] );
@@ -159,13 +164,13 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
                 }
                 for( int j = 0; j < columns.size(); ++j )
                 {
-                        if( j != 0 )
-                        {
-                                buff.append( ", " );
-                                args.append( ", " );
-                        }
-                        buff.append( tr.outputName( columns.get( j ).name.saneName ) );
-                        args.append( "?" );
+                    if( j != 0 )
+                    {
+                        buff.append( ", " );
+                        args.append( ", " );
+                    }
+                    buff.append( tr.outputName( columns.get( j ).name.saneName ) );
+                    args.append( "?" );
                 }
                 buff.append( " ) VALUES ( " );
                 buff.append( args );
@@ -176,11 +181,11 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                 int typesCache[] = new int[ columns.size() ];
                 for( int j = 0; j < columns.size(); ++j )
                 {
-                        typesCache[ j ] = columns.get( j ).sqlType;
-                        if( typesCache[ j ] == 0 )
-                        {
-                                System.out.println( "Can't resolve Type: " + columns.get( j ).name + " / " + columns.get( j ).sqlTypeName );
-                        }
+                    typesCache[ j ] = columns.get( j ).sqlType;
+                    if( typesCache[ j ] == 0 )
+                    {
+                        System.out.println( "Can't resolve Type: " + columns.get( j ).name + " / " + columns.get( j ).sqlTypeName );
+                    }
                 }
                 // TODO - do only if table has identity (when target is sqlserver)
                 String pre = tr.preLoadSetup( TABLES[ i ].saneName );
@@ -198,7 +203,7 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                         if( ESCAPE_UNICODE && data != null 
                                         && data instanceof String )
                         {
-                                data = UnicodeChecker.parseToUnicode( ( String )data );
+                            data = UnicodeChecker.parseToUnicode( ( String )data );
                         }
                         TEMP.add( data );
 //					pstm.setObject( j, rs.getObject( j ), rsmd.getColumnType( j ) );
@@ -208,13 +213,16 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                     TEMP.clear();
                     if( ( rows % MAX_BATCH_ROWS ) == 0 )
                     {
-                        System.out.print( "+" + i + "." + ( rows / MAX_BATCH_ROWS ) );
+                        readRows = rows;
+                        //System.out.print( "+" + i + "." + ( rows / MAX_BATCH_ROWS ) );
                         while( !astm.DATA_SHARED.isEmpty() && cacheLimit() )
                         {
                             try
                             {
-                                System.out.print( "W" );
+//                                System.out.print( "W" );
+                                sleeping = true;
                                 Thread.sleep( 1000 );
+                                sleeping = false;
                             }
                             catch( InterruptedException ex )
                             {
@@ -231,8 +239,10 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                 {
                     try
                     {
-                        System.out.print( "H" );
+//                        System.out.print( "H" );
+                        sleeping = true;
                         Thread.sleep( 500 );
+                        sleeping = false;
                         System.gc();
                     }
                     catch( InterruptedException ex )
@@ -242,6 +252,7 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                 }
             }
         }
+        rt.stopReporting();
         for( AsyncStatement async: threads )
         {
             if( async.isAlive() )
@@ -262,10 +273,20 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
             limit = (double)freeMem < .30 * MAX_MEM;
             if( limit )
             {
-                System.out.println( "free: " + freeMem + "/" + MAX_MEM );
+                System.out.println( "free: " + freeMem / (1024*1024) + "/" + MAX_MEM / (1024*1024) + "MB" );
                 System.gc();
             }
         }
         return limit;
+    }
+
+    public int getReadCount() 
+    {
+        return readRows;
+    }
+    
+    public boolean isSleeping()
+    {
+        return sleeping;
     }
 }

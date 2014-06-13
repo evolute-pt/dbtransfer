@@ -17,9 +17,9 @@ public class AsyncStatement extends Thread
 {
     public static int PARALLEL_THREADS = 1;
 
-    private static final List<Thread> THREADS = Collections.synchronizedList( new LinkedList<Thread>() );
+    private static final List<AsyncStatement> THREADS = Collections.synchronizedList( new LinkedList<AsyncStatement>() );
 
-    private static final List<Thread> R_THREADS = Collections.synchronizedList( new LinkedList<Thread>() );
+    private static final List<AsyncStatement> R_THREADS = Collections.synchronizedList( new LinkedList<AsyncStatement>() );
 
     private final int colTypes[];
     private final DBConnection CONN;
@@ -38,6 +38,8 @@ public class AsyncStatement extends Thread
 
     private boolean run = true;
 
+    private boolean sleep = false;
+    private int writeRows = 0;
 //	private int count = 0;
 
     /** Creates a new instance of AsyncStatement
@@ -98,9 +100,10 @@ System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + is
                 if( rowOK )
                 {
                     ++rows;
+                    writeRows = rows;
                     if( ( rows % Mover.MAX_BATCH_ROWS ) == 0 /* && OK */ )
                     {
-                        System.out.print( "-" + id + "." + ( rows / Mover.MAX_BATCH_ROWS ) );
+//                        System.out.print( "-" + id + "." + ( rows / Mover.MAX_BATCH_ROWS ) );
                         pStm.executeBatch();
                         rowOK = false;
                     }
@@ -108,16 +111,16 @@ System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + is
             }
             if( rowOK )
             {
-                    System.out.print( "|" + id );
-                    pStm.executeBatch();
-                    pStm.close();
+//                    System.out.print( "|" + id );
+                pStm.executeBatch();
+                pStm.close();
             }
             if( postSetup != null )
             {
-                    System.out.println( "Setup query: " + postSetup );
+//                    System.out.println( "Setup query: " + postSetup );
                     CONN.executeQuery( postSetup );
             }
-            System.out.println( "DONE " + id );
+//            System.out.println( "DONE " + id );
         }
         catch( Exception ex )
         {
@@ -139,7 +142,7 @@ System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + is
             {
                 if( !THREADS.isEmpty() )
                 {
-                    Thread t = THREADS.remove( 0 );
+                    AsyncStatement t = THREADS.remove( 0 );
                     R_THREADS.add( t );
                     t.start();
                 }	
@@ -196,8 +199,9 @@ System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + is
             {
                 try
                 {
-                    System.out.print("s." + id);
+                    sleep = true;
                     sleep(1000);
+                    sleep = false;
                 }
                 catch(InterruptedException ex)
                 {
@@ -218,5 +222,24 @@ System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + is
     public static int waitingThreads()
     {
         return THREADS.size();
+    }
+    
+    public boolean isSleeping()
+    {
+        return sleep;
+    }
+    
+    private int lastgetWriteRows = 0;
+    
+    public int getAndResetWriteRows()
+    {
+        int w = writeRows - lastgetWriteRows;
+        lastgetWriteRows = writeRows;
+        return w;
+    }
+    
+    public static List<AsyncStatement> getRunningThreads()
+    {
+        return R_THREADS;
     }
 }

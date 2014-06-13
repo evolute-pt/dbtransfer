@@ -6,7 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -85,25 +84,11 @@ public class JDBCConnection implements DBConnection
                 ResultSet rs = rsmd.getColumns( catalog, schema, table.originalName, null );
                 list = new LinkedList<ColumnDefinition>();
                 Map<String,ColumnDefinition> cols = new HashMap<String, ColumnDefinition>();
-    //		boolean quit = false;
-                System.out.println( "COL FOR TABLE: <" + table.originalName + ">" );
+//                System.out.println( "COL FOR TABLE: <" + table.originalName + ">" );
                 while( rs.next() )
                 {
                     Name name = new Name( rs.getString( 4 ) );
-                    System.out.println( "COL: " + name.originalName );
-    //			String name = StringPlainer.convertString( rs.getString( 4 ) );
-    //			if( "nag_calendario".equalsIgnoreCase( table ) )
-    //			{
-    //				System.out.println( "T: " + table + " <" + rs.getString( 4 ) + ">  PLAIN: <" + name + ">" );
-    //				quit = true;
-    //			}
-    //			else
-    //			{
-    //				if( quit )
-    //				{
-    //					System.exit( 0 );
-    //				}
-    //			}
+//                    System.out.println( "COL: " + name.originalName );
                     if( !cols.containsKey( name.saneName ) )
                     {
                         ColumnDefinition col = new ColumnDefinition();
@@ -123,7 +108,7 @@ public class JDBCConnection implements DBConnection
                         col.isNotNull = "NO".equals( rs.getString( 18 ).trim() );
                         cols.put( col.name.saneName, col );
                         list.add( col );
-                        System.out.println( "Adding col: " + table.originalName + " - " + name );
+//                        System.out.println( "Adding col: " + table.originalName + " - " + name );
                     }
                     else
                     {
@@ -135,7 +120,7 @@ public class JDBCConnection implements DBConnection
                 list = Collections.unmodifiableList( list );
                 MAP_TABLE_COLUMNS.put( table.originalName, list );
             }
-            System.out.println( "COLSS size: " + list.size() );
+//            System.out.println( "COLSS size: " + list.size() );
             return list;
 	}
 
@@ -198,7 +183,7 @@ public class JDBCConnection implements DBConnection
             while( rs.next() )
             {
                 String fkName = rs.getString( 12 );
-System.out.println( "FK : " + fkName );
+//System.out.println( "FK : " + fkName );
                 ForeignKeyDefinition fk = fks.get( fkName );
                 if( fk == null )
                 {
