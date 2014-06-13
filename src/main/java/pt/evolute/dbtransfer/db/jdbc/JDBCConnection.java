@@ -6,6 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,6 +71,11 @@ public class JDBCConnection implements DBConnection
                             continue;
                     }
                     v.add( n );
+                    /* REMOVE!!!! */
+                    if( !v.isEmpty() )
+                    {
+                        break;
+                    }
 		}
 		rs.close();
 		return v;
@@ -130,6 +137,7 @@ public class JDBCConnection implements DBConnection
                     }
                 }
                 rs.close();
+                list = Collections.unmodifiableList( list );
                 MAP_TABLE_COLUMNS.put( table.originalName, list );
             }
             System.out.println( "COLSS size: " + list.size() );
@@ -237,9 +245,10 @@ System.out.println( "FK : " + fkName );
 	public Virtual2DArray getFullTable( Name table ) throws Exception
 	{
 		List<ColumnDefinition> cols = getColumnList( table );
-		StringBuilder buffer = new StringBuilder( cols.remove( 0 ).name.originalName );
-		for( ColumnDefinition col: cols )
+                StringBuilder buffer = new StringBuilder( cols.get( 0 ).name.originalName );
+	        for( int i = 1; i < cols.size(); ++i )
 		{
+                    ColumnDefinition col = cols.get( i );
 			buffer.append( ", " );
 			buffer.append( col.name.originalName );
 		}

@@ -163,8 +163,14 @@ public class NullHelper implements Helper
 		{
 			pStm.setNull(col + 1, translateType( type ) );
 		}
+                else if( type == Types.BLOB || type == Types.LONGVARBINARY || type == Types.VARBINARY )
+                {
+//                System.out.println( "SPV BINARY: " + o + " t: " + type );
+			pStm.setBytes( col + 1, ( byte[] )outputValue( o ) );
+		}
 		else
 		{
+//                    System.out.println( "SPV: " + o + " t: " + type );
 			pStm.setObject(col + 1, outputValue( o ), translateType( type ) );
 		}
 	}

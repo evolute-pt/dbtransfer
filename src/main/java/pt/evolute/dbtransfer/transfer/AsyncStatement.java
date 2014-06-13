@@ -175,6 +175,7 @@ System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + is
             {
                 Object o = PRIVATE_DATA.remove(0);
                 int type = colTypes[col];
+//                System.out.println( "D: " + o + " type: " + type );
                 destHelper.setPreparedValue( pStm, col, o, type );
             }
         }

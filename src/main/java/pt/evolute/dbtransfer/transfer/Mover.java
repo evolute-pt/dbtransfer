@@ -172,7 +172,7 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
                 buff.append( " )" );
                 String insert = buff.toString();
 //			PreparedStatement pstm = CON_DEST.prepareStatement( insert );
-System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert );
+System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert + " colList.sz: " + columns.size() );
                 int typesCache[] = new int[ columns.size() ];
                 for( int j = 0; j < columns.size(); ++j )
                 {
