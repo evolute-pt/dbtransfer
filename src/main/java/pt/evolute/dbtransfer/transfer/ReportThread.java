@@ -49,11 +49,20 @@ public class ReportThread extends Thread
             }
             for( AsyncStatement as: threads )
             {
+                int privateRows = as.getPrivateRowsSize();
                 System.out.println( "WRITE: id: " + as.getName() + " rows: " 
                         + as.getAndResetWriteRows() + " in " + SLEEP_TIME_MS + "ms " 
                         + ( as.isSleeping()? "sleeping!": "" )
                         + " shared rows: " + as.getSharedRowsSize()
-                        + " private rows: " + as.getPrivateRowsSize());
+                        + " private rows: " + privateRows );
+                if( privateRows == 0)
+                {
+                    long totalMem = Runtime.getRuntime().totalMemory();
+                    long freeMem = Runtime.getRuntime().freeMemory();
+                    System.out.println( "free: " + freeMem / (1024*1024) 
+                        + "/" + totalMem / (1024*1024) + "MB" );
+                    System.gc();
+                }
             }
             try
             {
