@@ -17,7 +17,7 @@ import java.util.List;
 public class ReportThread extends Thread
 {
     private static final int SLEEP_TIME_MS = 5000;
-    private static final NumberFormat NF = new DecimalFormat("##0E0");
+    private static final NumberFormat NF = new DecimalFormat("##0.00E0");
     
     private final Mover mover;
     private final List<AsyncStatement> threads;
@@ -33,13 +33,17 @@ public class ReportThread extends Thread
         setDaemon( true );
     }
     
-    private static String suffix[] = { "", "k", "m", "g", "t", "e" };
+    private static final String suffix[] = { "", "k", "m", "g", "t", "e" };
     
     private static String format( long l )
     {
         String str = NF.format( l );
         int i = str.indexOf( "E" );
-        int e = Integer.parseInt( str.substring( i + 1 ) ) / 3;
+        int e = 0;
+        if( i > -1 )
+        {
+            e = Integer.parseInt( str.substring( i + 1 ) ) / 3;
+        }
         str = str.substring( 0, i - 2 );
         
         return str + suffix[ e ];
