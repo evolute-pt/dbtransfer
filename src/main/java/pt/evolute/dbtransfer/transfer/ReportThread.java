@@ -55,14 +55,11 @@ public class ReportThread extends Thread
                         + ( as.isSleeping()? "sleeping!": "" )
                         + " shared rows: " + as.getSharedRowsSize()
                         + " private rows: " + privateRows );
-                if( privateRows == 0)
-                {
-                    long totalMem = Runtime.getRuntime().totalMemory();
-                    long freeMem = Runtime.getRuntime().freeMemory();
-                    System.out.println( "free: " + freeMem / (1024*1024) 
+                long totalMem = Runtime.getRuntime().totalMemory();
+                long freeMem = Runtime.getRuntime().freeMemory();
+                System.out.println( "free: " + freeMem / (1024*1024) 
                         + "/" + totalMem / (1024*1024) + "MB" );
-                    System.gc();
-                }
+                System.gc();
             }
             try
             {
