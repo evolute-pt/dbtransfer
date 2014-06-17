@@ -2,6 +2,7 @@ package pt.evolute.dbtransfer.transfer;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +29,7 @@ public class AsyncStatement extends Thread
     private final String id;
 
     private final List<Object> PRIVATE_DATA = new LinkedList<Object>();
-    public final List<Object> DATA_SHARED = Collections.synchronizedList( new LinkedList<Object>() );
+    public final List<Object> DATA_SHARED = Collections.synchronizedList( new ArrayList<Object>() );
 
 //	private final Object LOCK = new Object();
 
