@@ -190,7 +190,7 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                 // TODO - do only if table has identity (when target is sqlserver)
                 String pre = tr.preLoadSetup( TABLES[ i ].saneName );
                 String post = tr.postLoadSetup( TABLES[ i ].saneName );
-                AsyncStatement astm = new AsyncStatement( typesCache, CON_DEST, insert, i, pre, post );
+                AsyncStatement astm = new AsyncStatement( typesCache, CON_DEST, insert, TABLES[ i ].saneName, pre, post );
                 threads.add( astm );
                 int rows = 0;
 

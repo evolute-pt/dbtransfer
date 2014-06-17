@@ -25,7 +25,7 @@ public class AsyncStatement extends Thread
     private final DBConnection CONN;
     private final String INSERT;
 
-    private final int id;
+    private final String id;
 
     private final List<Object> PRIVATE_DATA = new LinkedList<Object>();
     public final List<Object> DATA_SHARED = Collections.synchronizedList( new LinkedList<Object>() );
@@ -49,17 +49,17 @@ public class AsyncStatement extends Thread
  * @param n identifier
  * @param preSetup pre-exec query
  * @param postSetup post-exec query*/
-    public AsyncStatement( int types[], DBConnection con, String insert, int n, 
+    public AsyncStatement( int types[], DBConnection con, String insert, String threadId, 
                     String preSetup, String postSetup )
     {
         this.preSetup = preSetup;
         this.postSetup = postSetup;
         this.destHelper = con.getHelper();
-        id = n;
+        id = threadId;
         colTypes = types;
         CONN = con;
         INSERT = insert;
-        setName( "AsyncStatement " + n );
+        setName( "AsyncStatement " + id );
         synchronized( R_THREADS )
         {
             if( R_THREADS.size() >= PARALLEL_THREADS )
@@ -72,7 +72,7 @@ public class AsyncStatement extends Thread
                 start();
             }	
         }
-System.out.println( "Async " + n + " created \n" + INSERT + "\nisRunning? " + isAlive() );
+System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + isAlive() );
     }
 
     @Override
