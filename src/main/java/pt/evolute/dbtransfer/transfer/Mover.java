@@ -275,12 +275,16 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
             limit = (double)freeMem < .30 * MAX_MEM;
             if( limit )
             {
+                if( (double)freeMem < .1 * MAX_MEM )
+                {
 //                System.out.println( "free: " + freeMem / (1024*1024) 
 //                        + "/" + MAX_MEM / (1024*1024) + "MB" );
-                if( ( System.currentTimeMillis() - lastGc ) > 60 * 1000 )
-                {
-                    System.gc();
-                    lastGc = System.currentTimeMillis();
+                    if( ( System.currentTimeMillis() - lastGc ) > 60 * 1000 )
+                    {
+                        System.out.println( "Invoking GC" );
+                        System.gc();
+                        lastGc = System.currentTimeMillis();
+                    }
                 }
             }
         }
