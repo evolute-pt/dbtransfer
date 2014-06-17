@@ -6,6 +6,8 @@
 
 package pt.evolute.dbtransfer.transfer;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.List;
 
 /**
@@ -15,6 +17,7 @@ import java.util.List;
 public class ReportThread extends Thread
 {
     private static final int SLEEP_TIME_MS = 5000;
+    private static final NumberFormat NF = new DecimalFormat("##0E0");
     
     private final Mover mover;
     private final List<AsyncStatement> threads;
@@ -30,6 +33,18 @@ public class ReportThread extends Thread
         setDaemon( true );
     }
     
+    private static String suffix[] = { "", "k", "m", "g", "t", "e" };
+    
+    private static String format( long l )
+    {
+        String str = NF.format( l );
+        int i = str.indexOf( "E" );
+        int e = Integer.parseInt( str.substring( i + 1 ) ) / 3;
+        str = str.substring( 0, i - 2 );
+        
+        return str + suffix[ e ];
+    }
+    
     @Override
     public void run()
     {
@@ -43,8 +58,8 @@ public class ReportThread extends Thread
             }
             int r = mover.getReadCount();
             long last = System.currentTimeMillis();
-            System.out.println( "READ: " + ( r - lastRead ) 
-                    + " in " + ( last - lastReport ) + "ms sleeping: " + mover.isSleeping() );
+            System.out.println( "READ: " + format( r - lastRead ) 
+                    + " in " + ( last - lastReport ) + "ms" + ( mover.isSleeping()? " sleeping!":"" ) );
             lastRead = r;
             if( threads.size() > 1 )
             {
@@ -57,7 +72,7 @@ public class ReportThread extends Thread
                 int sharedRows = as.getSharedRowsSize();
                 last = System.currentTimeMillis();
                 System.out.println( "WRITE: " + as.getName() + " rows: " 
-                        + writeRows + " in " + ( last - lastReport ) + "ms " 
+                        + format( writeRows ) + " in " + ( last - lastReport ) + "ms " 
                         + ( as.isSleeping()? "sleeping!": "" )
                         + " shared rows: " + sharedRows
                         + " private rows: " + privateRows );

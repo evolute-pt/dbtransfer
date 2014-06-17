@@ -29,6 +29,7 @@ import pt.evolute.utils.arrays.exception.EndOfArrayException;
 public class Mover extends Connector implements Constants
 {
     public static final int MAX_BATCH_ROWS = 1024;
+    public static final int MAX_SHARED_ROWS = 1000000;
 
     private final Name TABLES[];
     private final String SRC_URL;
@@ -217,7 +218,8 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                     {
                         readRows = rows;
                         //System.out.print( "+" + i + "." + ( rows / MAX_BATCH_ROWS ) );
-                        while( !astm.DATA_SHARED.isEmpty() && cacheLimit() )
+                        while( !astm.DATA_SHARED.isEmpty() 
+                                && ( astm.DATA_SHARED.size() > MAX_SHARED_ROWS * columns.size() || cacheLimit() ) )
                         {
                             try
                             {
