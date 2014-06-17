@@ -245,7 +245,7 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                         sleeping = true;
                         Thread.sleep( 500 );
                         sleeping = false;
-                        System.gc();
+                        cacheLimit();
                     }
                     catch( InterruptedException ex )
                     {
