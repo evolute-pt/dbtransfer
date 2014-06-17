@@ -21,6 +21,8 @@ public class ReportThread extends Thread
     
     private boolean running = true;
     
+    private long lastReport = System.currentTimeMillis();
+    
     public ReportThread( Mover mov, List<AsyncStatement> list )
     {
         mover = mov;
@@ -40,8 +42,9 @@ public class ReportThread extends Thread
                 System.out.println( "WAITING WRITES" );
             }
             int r = mover.getReadCount();
+            long last = System.currentTimeMillis();
             System.out.println( "READ: " + ( r - lastRead ) 
-                    + " in " + SLEEP_TIME_MS + "ms sleeping: " + mover.isSleeping() );
+                    + " in " + ( last - lastReport ) + "ms sleeping: " + mover.isSleeping() );
             lastRead = r;
             if( threads.size() > 1 )
             {
@@ -49,17 +52,21 @@ public class ReportThread extends Thread
             }
             for( AsyncStatement as: threads )
             {
+                int writeRows = as.getAndResetWriteRows();
                 int privateRows = as.getPrivateRowsSize();
+                int sharedRows = as.getSharedRowsSize();
+                last = System.currentTimeMillis();
                 System.out.println( "WRITE: " + as.getName() + " rows: " 
-                        + as.getAndResetWriteRows() + " in " + SLEEP_TIME_MS + "ms " 
+                        + writeRows + " in " + ( last - lastReport ) + "ms " 
                         + ( as.isSleeping()? "sleeping!": "" )
-                        + " shared rows: " + as.getSharedRowsSize()
+                        + " shared rows: " + sharedRows
                         + " private rows: " + privateRows );
                 long totalMem = Runtime.getRuntime().totalMemory();
                 long freeMem = Runtime.getRuntime().freeMemory();
                 System.out.println( "free/allocated JVM memory: " + freeMem / (1024*1024) 
                         + "/" + totalMem / (1024*1024) + "MB" );
-                System.gc();
+                lastReport = last;
+//                System.gc();
             }
             try
             {
