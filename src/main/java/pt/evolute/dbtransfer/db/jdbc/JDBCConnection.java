@@ -33,8 +33,12 @@ import pt.evolute.utils.arrays.CursorResultSet2DArray;
 public class JDBCConnection implements DBConnection
 {
 	public static boolean debug = false;
+        
+        private final String dbUrl;
+        private final String dbUser;
+        private final String dbPasswd;
 	
-	private final Connection connection;
+	private Connection connection;
 
 	private final String catalog;
 	private final String schema;
@@ -47,7 +51,10 @@ public class JDBCConnection implements DBConnection
 	public JDBCConnection( String url, String user, String pass, boolean onlyNotEmpty )
 			throws Exception
 	{
-		connection = Connector.getConnection( url, user, pass );
+		dbUrl = url;
+                dbUser= user;
+                dbPasswd= pass;
+                testInitConnection();
 		catalog = connection.getCatalog();
 		schema = Connector.getSchema( url );
 		ignoreEmpty = onlyNotEmpty;
@@ -55,6 +62,31 @@ public class JDBCConnection implements DBConnection
 		System.out.println( "JDBC: " + url + " catalog: " + catalog + " schema: " + schema );
 	}
 
+        private void testInitConnection()
+                throws Exception
+        {
+            boolean init = false;
+            if( connection == null )
+            {
+                init = true;
+            }
+            else
+            {
+                try
+                {
+                    init = connection.isClosed() || !connection.isValid( 4 );
+                }
+                catch( Exception ex )
+                {
+                    init = true;
+                }
+            }
+            if( init )
+            {
+                connection = Connector.getConnection( dbUrl, dbUser, dbPasswd );
+            }
+        }
+        
 	public List<Name> getTableList()
 			throws Exception
 	{
@@ -80,6 +112,7 @@ public class JDBCConnection implements DBConnection
             List<ColumnDefinition> list = MAP_TABLE_COLUMNS.get( table.originalName );
             if( list == null )
             {
+                testInitConnection();
                 DatabaseMetaData rsmd = connection.getMetaData();
                 ResultSet rs = rsmd.getColumns( catalog, schema, table.originalName, null );
                 list = new LinkedList<ColumnDefinition>();
@@ -130,6 +163,7 @@ public class JDBCConnection implements DBConnection
             {
                 System.out.println( "SQL: " + sql );
             }
+            testInitConnection();
             Statement stm = connection.createStatement( ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY );
             helper.setupStatement( stm );
             boolean hasResult = stm.execute( sql );

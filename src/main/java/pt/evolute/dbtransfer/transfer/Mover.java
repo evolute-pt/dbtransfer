@@ -232,7 +232,7 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                     ++row;
                     hasData = testRow( rs, row );
                 }
-                System.out.println( "S" + i );
+                System.out.println( "Done reading table: " + TABLES[ i ].saneName );
                 astm.stopThread();
 //				astm.join();
                 while( AsyncStatement.waitingThreads() > 0 /* !astm.DATA_SHARED.isEmpty() /*( 3 * typesCache.length * MAX_BATCH_ROWS )*/ )
