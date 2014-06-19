@@ -116,6 +116,7 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
                 pStm.executeBatch();
                 pStm.close();
             }
+            System.out.println( "Done writing table: " + id + " (" + rows + " rows written)" );
             if( postSetup != null )
             {
 //                    System.out.println( "Setup query: " + postSetup );
