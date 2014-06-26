@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.Collections;
@@ -74,7 +75,7 @@ public class JDBCConnection implements DBConnection
         private void testInitConnection()
                 throws Exception
         {
-            boolean init = false;
+            boolean init;
             if( connection == null )
             {
                 init = true;
@@ -85,7 +86,7 @@ public class JDBCConnection implements DBConnection
                 {
                     init = connection.isClosed() || !connection.isValid( 4 );
                 }
-                catch( Exception ex )
+                catch( SQLException ex )
                 {
                     init = true;
                 }

@@ -36,7 +36,11 @@ public class Constrainer  extends Connector implements Constants
 	
 	private final boolean ignoreEmpty;
 	
-	/** Creates a new instance of Constrainer */
+	/** Creates a new instance of Constrainer
+     * @param props
+     * @param src
+     * @param dst
+     * @throws java.lang.Exception */
 	public Constrainer( Properties props, ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
 		throws Exception
 	{
@@ -120,12 +124,12 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			catch(SQLException ex)
 			{
 				System.out.println("Error: " + buff);
-				if(ex.getMessage().indexOf("ultiple") == -1 
-						&& ex.getMessage().indexOf("violates") == -1)
+				if( !ex.getMessage().contains("ultiple") 
+						&& !ex.getMessage().contains("violates") )
 				{
-					System.out.println("MSG: " + ex.getMessage());
-					throw ex;
-				}
+                                    System.out.println("MSG: " + ex.getMessage());
+                                        throw ex;
+                                }
 			}
 		}
 	}
@@ -157,9 +161,9 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 				catch(SQLException ex)
 				{
 					System.out.println("Error: " + buff);
-					if(ex.getMessage().indexOf("ultiple") == -1 
-							&& ex.getMessage().indexOf("violates") == -1 
-							&& ex.getMessage().indexOf( "already exists" ) == -1 )
+					if( !ex.getMessage().contains("ultiple") 
+							&& !ex.getMessage().contains("violates") 
+							&& !ex.getMessage().contains( "already exists" ) )
 					{
 						System.out.println("MSG: " + ex.getMessage());
 						throw ex;
@@ -193,7 +197,7 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			catch(SQLException ex)
 			{
 				System.out.println("Error: " + buff);
-				if(ex.getMessage().indexOf("ultiple") == -1)
+				if( !ex.getMessage().contains("ultiple") )
 				{
 					throw ex;
 				}
