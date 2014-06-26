@@ -11,6 +11,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import pt.evolute.dbtransfer.db.helper.Helper;
 
 import pt.evolute.utils.string.StringPlainer;
 
@@ -31,7 +32,7 @@ public class Connector
 		SCHEMAS.put( "hsqldb", "PUBLIC" );
 		SCHEMAS.put( "sqlserver", "dbo" );
 	}
-	
+        
 	public static Connection getConnection( String url, String user, String passwd )
 		throws SQLException
 	{

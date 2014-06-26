@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import pt.evolute.dbtransfer.analyse.Analyser;
 import pt.evolute.dbtransfer.constrain.Constrainer;
+import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
 import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
 import pt.evolute.dbtransfer.diff.Diff;
@@ -26,11 +27,14 @@ public class Main
 		System.out.println( "BEGIN: " + new Date() );
 		long start = System.currentTimeMillis();
 		
+                ConnectionDefinitionBean srcBean = ConnectionDefinitionBean.loadBean( props, Constants.SOURCE_PROPS );
+                ConnectionDefinitionBean dstBean = ConnectionDefinitionBean.loadBean( props, Constants.DESTINATION_PROPS );
+                
                 JDBCConnection.debug = "true".equalsIgnoreCase(props.getProperty( Constants.DEBUG ) );
 		if( "true".equalsIgnoreCase(props.getProperty( Constants.ANALYSE ) ) )
 		{
 			System.out.println( "Analysing" );
-			Analyser a = new Analyser( props );
+			Analyser a = new Analyser( props, srcBean, dstBean );
 			a.cloneDB();
 		}
 		if( "true".equalsIgnoreCase(props.getProperty( Constants.TRANSFER ) ) )
@@ -48,7 +52,7 @@ public class Main
 			}
                     }
                     System.out.println( "Transfering" );
-                    Mover m = new Mover( props );
+                    Mover m = new Mover( props, srcBean, dstBean );
                     try
                     {
                             m.moveDB();
@@ -64,13 +68,13 @@ public class Main
 		if( "true".equalsIgnoreCase( props.getProperty( Constants.CONSTRAIN ) ) )
 		{
 			System.out.println( "Constraining" );
-			Constrainer c = new Constrainer( props );
+			Constrainer c = new Constrainer( props, srcBean, dstBean );
 			c.constrainDB();
 		}
 		if( "true".equalsIgnoreCase( props.getProperty( Constants.DIFF ) ) )
 		{
 			System.out.println( "Diffing" );
-			Diff d = new Diff( props );
+			Diff d = new Diff( props, srcBean, dstBean );
 			d.diffDb();
 		}
 			System.out.println( "END: " + new Date() );

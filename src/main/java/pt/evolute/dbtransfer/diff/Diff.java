@@ -23,6 +23,7 @@ import pt.evolute.dbtransfer.constrain.Constrainer;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
+import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.transfer.Mover;
 
@@ -37,8 +38,8 @@ public class Diff extends Connector implements Constants
 	public static final int MAX_BATCH_ROWS = 4096;
 	
 	private final Name TABLES[];
-	private final String SRC_URL;
-	private final String DEST_URL;
+	private final ConnectionDefinitionBean SRC;
+	private final ConnectionDefinitionBean DST;
 	private final DBConnection CON_SRC;
 	private final DBConnection CON_DEST;
 	
@@ -46,23 +47,19 @@ public class Diff extends Connector implements Constants
 	
 	private final Properties props;
 	
-	public Diff( Properties props )
+	public Diff( Properties props, ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
 		throws Exception
 	{
 		this.props = props;
-		SRC_URL = props.getProperty( URL_DB_SOURCE );
-		String srcUser = props.getProperty( USER_DB_SOURCE );
-		String srcPasswd = props.getProperty( PASSWORD_DB_SOURCE );
+		SRC = src;
+                DST = dst;
 		boolean ignoreEmpty = Boolean.parseBoolean( props.getProperty( ONLY_NOT_EMPTY, "false" ) );
 		
-		CON_SRC = DBConnector.getConnection( SRC_URL, srcUser, srcPasswd, ignoreEmpty );
+		CON_SRC = DBConnector.getConnection( SRC, ignoreEmpty );
 		
 		comment = props.getProperty( DIFF_COMMENT );
 		
-		DEST_URL = props.getProperty( URL_DB_DESTINATION );
-		String destUser = props.getProperty( USER_DB_DESTINATION );
-		String destPasswd = props.getProperty( PASSWORD_DB_DESTINATION );
-		CON_DEST = DBConnector.getConnection( DEST_URL, destUser, destPasswd, false );
+		CON_DEST = DBConnector.getConnection( DST, false );
 		
 	System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
 	
@@ -199,7 +196,7 @@ public class Diff extends Connector implements Constants
 		assigns[ rowData.length + 2 ] = new Assignment( COLUMN_MODIFIED_STAMP, new Timestamp( System.currentTimeMillis() ) );
 		
 		Update update = new Update( table.toString(), assigns, getPkExpression(table, pk) );
-		update.setBackend( BackendProvider.getBackend( DEST_URL ) );
+		update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
 		try
 		{
 			CON_DEST.executeQuery( update.toString() );
@@ -220,7 +217,7 @@ public class Diff extends Connector implements Constants
 		assigns[ 2 ] = new Assignment( COLUMN_MODIFIED_STAMP, new Timestamp( System.currentTimeMillis() ) );
 		
 		Update update = new Update( table.toString(), assigns, getPkExpression(table, pk) );
-		update.setBackend( BackendProvider.getBackend( DEST_URL ) );
+		update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
 		try
 		{
 			CON_DEST.executeQuery( update.toString() );
@@ -247,7 +244,7 @@ public class Diff extends Connector implements Constants
 		assigns[ rowData.length + 2 ] = new Assignment( COLUMN_MODIFIED_STAMP, new Timestamp( System.currentTimeMillis() ) );
 		
 		Insert insert = new Insert( table.toString(), assigns );
-		insert.setBackend( BackendProvider.getBackend( DEST_URL ) );
+		insert.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
 		CON_DEST.executeQuery( insert.toString() );
 	}
 	
@@ -259,7 +256,7 @@ public class Diff extends Connector implements Constants
 					new Assignment( COLUMN_MODIFIED_COMMENT, "comment" ),
 					new Assignment( COLUMN_MODIFIED_STAMP, new Timestamp( System.currentTimeMillis() ) )
 				} , getPkExpression( table, pk ).and( new Field( COLUMN_MODIFIED_ACTION ).isDifferent( "d" ) ) );
-		update.setBackend( BackendProvider.getBackend( DEST_URL ) );
+		update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
 		CON_DEST.executeQuery( update.toString() );
 	}
 	
@@ -331,11 +328,11 @@ public class Diff extends Connector implements Constants
 		List<Name> v = CON_DEST.getTableList();
 		if( v.isEmpty() && TABLES.length > 0 )
 		{
-			Analyser analyser = new Analyser( props );
+			Analyser analyser = new Analyser( props, SRC, DST );
 			analyser.cloneDB();
-			Mover mover = new Mover( props );
+			Mover mover = new Mover( props, SRC, DST );
 			mover.moveDB();
-			Constrainer constrainer = new Constrainer( props );
+			Constrainer constrainer = new Constrainer( props, SRC, DST );
 			constrainer.constrainDB();
 			// all OK :) 
 		}

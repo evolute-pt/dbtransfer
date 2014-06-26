@@ -13,16 +13,18 @@ package pt.evolute.dbtransfer;
 public interface Constants
 {
 	public static String URL_DB_SOURCE = "URL_DB_SOURCE";
-	
 	public static String USER_DB_SOURCE = "USER_DB_SOURCE";
-	
 	public static String PASSWORD_DB_SOURCE = "PASSWORD_DB_SOURCE";
+        public static String SCHEMA_DB_SOURCE = "SCHEMA_DB_SOURCE";
+        
+        public static String[] SOURCE_PROPS = { URL_DB_SOURCE, USER_DB_SOURCE, PASSWORD_DB_SOURCE, SCHEMA_DB_SOURCE };
 	
 	public static String URL_DB_DESTINATION = "URL_DB_DESTINATION";
-	
 	public static String USER_DB_DESTINATION = "USER_DB_DESTINATION";
-	
 	public static String PASSWORD_DB_DESTINATION = "PASSWORD_DB_DESTINATION";
+        public static String SCHEMA_DB_DESTINATION = "SCHEMA_DB_DESTINATION";
+        
+        public static String DESTINATION_PROPS[] = { URL_DB_DESTINATION, USER_DB_DESTINATION, PASSWORD_DB_DESTINATION, SCHEMA_DB_DESTINATION };
 	
 	public static String ANALYSE = "ANALYSE";
 	

@@ -42,4 +42,7 @@ public interface Helper
 	public void setPreparedValue(PreparedStatement pStm, int col, Object o, int type) throws SQLException;
 
     public void setupStatement(Statement stm) throws SQLException;
+
+    public void initConnection( DBConnection con)
+            throws Exception;
 }

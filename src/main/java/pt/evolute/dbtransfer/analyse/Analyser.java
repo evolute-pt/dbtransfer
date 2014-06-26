@@ -8,6 +8,7 @@ import pt.evolute.dbtransfer.Constants;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
+import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
@@ -19,7 +20,8 @@ import pt.evolute.dbtransfer.db.helper.HelperManager;
 public class Analyser implements Constants
 {	
 	private final Name TABLES[];
-	private final String SRC_URL;
+	private final ConnectionDefinitionBean SRC;
+        private final ConnectionDefinitionBean DST;
 	private final DBConnection CON_SRC;
 //	private final DatabaseMetaData DB_META;
 	private final Properties PROPS;
@@ -30,21 +32,20 @@ public class Analyser implements Constants
 	/** Creates a new instance of Analyser
      * @param props
      * @throws java.lang.Exception */
-	public Analyser( Properties props )
+	public Analyser( Properties props, ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
 		throws Exception
 	{
 		PROPS = props;
-		SRC_URL = props.getProperty( URL_DB_SOURCE );
-		String srcUser = props.getProperty( USER_DB_SOURCE );
-		String srcPasswd = props.getProperty( PASSWORD_DB_SOURCE );
-		
-		boolean ignoreEmpty = Boolean.parseBoolean( PROPS.getProperty( ONLY_NOT_EMPTY, "false" ) );
-		
-		CON_SRC = DBConnector.getConnection( SRC_URL, srcUser, srcPasswd, ignoreEmpty );
+		SRC = src;
+                DST = dst;
+                
+                boolean ignoreEmpty = Boolean.parseBoolean( PROPS.getProperty( ONLY_NOT_EMPTY, "false" ) );
+                
+		CON_SRC = DBConnector.getConnection( SRC.getUrl(), SRC.getUser(), SRC.getPassword(), ignoreEmpty, SRC.getSchema() );
 		List<Name> v = CON_SRC.getTableList();
 		TABLES = v.toArray( new Name[ v.size() ] );
 		
-		SRC_TR = HelperManager.getTranslator( SRC_URL );
+		SRC_TR = HelperManager.getTranslator( SRC.getUrl() );
 		DEST_TR = HelperManager.getTranslator( props.getProperty( URL_DB_DESTINATION ) );
 	}
 	
@@ -86,11 +87,8 @@ public class Analyser implements Constants
 			v2.add( "DROP TABLE " + TABLES[ i ] + " CASCADE" );
 			v.add( buff );
 		}
-		String destURL = PROPS.getProperty( URL_DB_DESTINATION );
-		String destUser = PROPS.getProperty( USER_DB_DESTINATION );
-		String destPasswd = PROPS.getProperty( PASSWORD_DB_DESTINATION );
 		
-		DBConnection destCon = DBConnector.getConnection( destURL, destUser, destPasswd, false );
+                DBConnection destCon = DBConnector.getConnection( DST.getUrl(), DST.getUser(), DST.getPassword(), false, DST.getSchema() );
 		for( int i = 0; i < v.size(); ++i )
 		{
 			try

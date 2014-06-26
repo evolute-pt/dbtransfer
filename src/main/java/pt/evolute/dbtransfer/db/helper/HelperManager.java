@@ -24,6 +24,11 @@ public class HelperManager
 			System.out.println( "MySQL translator" );
 			tr = MySQLServerHelper.getTranslator();
 		}
+                else if( url.startsWith( "jdbc:oracle:" ) )
+		{
+			System.out.println( "Oracle translator" );
+			tr = OracleServerHelper.getTranslator();
+		}
 		if( tr == null )
 		{
 			System.out.println( "Default translator" );

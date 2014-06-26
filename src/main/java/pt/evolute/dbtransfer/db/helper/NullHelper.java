@@ -1,5 +1,6 @@
 package pt.evolute.dbtransfer.db.helper;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -178,6 +179,10 @@ public class NullHelper implements Helper
         @Override
     public void setupStatement(Statement stm) 
             throws SQLException
+    {
+    }
+
+    public void initConnection( DBConnection con) throws Exception 
     {
     }
 }

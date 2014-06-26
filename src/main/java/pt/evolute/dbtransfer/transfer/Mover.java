@@ -14,6 +14,7 @@ import pt.evolute.dbtransfer.Constants;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
+import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.helper.Helper;
@@ -32,8 +33,9 @@ public class Mover extends Connector implements Constants
     public static final int MAX_SHARED_ROWS = 1000000;
 
     private final Name TABLES[];
-    private final String SRC_URL;
-    private final String DEST_URL;
+    private final ConnectionDefinitionBean SRC;
+    private final ConnectionDefinitionBean DST;
+    
     private final DBConnection CON_SRC;
     private final DBConnection CON_DEST;
     private final boolean CHECK_DEPS;
@@ -48,21 +50,17 @@ public class Mover extends Connector implements Constants
 //	private static int oom = 0;
 
     /** Creates a new instance of Mover */
-    public Mover( Properties props )
+    public Mover( Properties props, ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
             throws Exception
     {
-        SRC_URL = props.getProperty( URL_DB_SOURCE );
+        SRC = src;
+        DST = dst;
         ESCAPE_UNICODE = "true".equals( props.getProperty( TRANSFER_ESCAPE_UNICODE ) );
-        String srcUser = props.getProperty( USER_DB_SOURCE );
-        String srcPasswd = props.getProperty( PASSWORD_DB_SOURCE );
         boolean ignoreEmpty = Boolean.parseBoolean( props.getProperty( ONLY_NOT_EMPTY, "false" ) );
 
-        CON_SRC = DBConnector.getConnection( SRC_URL, srcUser, srcPasswd, ignoreEmpty );
+        CON_SRC = DBConnector.getConnection( SRC, ignoreEmpty );
 
-        DEST_URL = props.getProperty( URL_DB_DESTINATION );
-        String destUser = props.getProperty( USER_DB_DESTINATION );
-        String destPasswd = props.getProperty( PASSWORD_DB_DESTINATION );
-        CON_DEST = DBConnector.getConnection( DEST_URL, destUser, destPasswd, false );
+        CON_DEST = DBConnector.getConnection( DST, false );
 System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
 
         CHECK_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_CHECK_DEPS, "false" ) );
@@ -139,7 +137,7 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
         System.out.println( "Moving (" + TABLES.length + " tables)" );
         final List<Object> TEMP = new LinkedList<Object>();
         List<AsyncStatement> threads = new LinkedList<AsyncStatement>();
-        Helper tr = HelperManager.getTranslator( DEST_URL );
+        Helper tr = HelperManager.getTranslator( DST.getUrl() );
         
         ReportThread rt = new ReportThread( this, AsyncStatement.getRunningThreads() );
         rt.start();

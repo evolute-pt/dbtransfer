@@ -10,6 +10,7 @@ import pt.evolute.dbtransfer.Constants;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
+import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.beans.PrimaryKeyDefinition;
@@ -25,7 +26,8 @@ public class Constrainer  extends Connector implements Constants
 	public static final String CONSTRAIN_KEEP_NAMES = "CONSTRAIN.KEEP_NAMES";
 	
 	private final Name TABLES[];
-	private final String SRC_URL;
+	private final ConnectionDefinitionBean SRC;
+        private final ConnectionDefinitionBean DST;
 	private final DBConnection CON_SRC;
 	private final DBConnection CON_DEST;
 	
@@ -35,22 +37,18 @@ public class Constrainer  extends Connector implements Constants
 	private final boolean ignoreEmpty;
 	
 	/** Creates a new instance of Constrainer */
-	public Constrainer( Properties props )
+	public Constrainer( Properties props, ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
 		throws Exception
 	{
-		SRC_URL = props.getProperty( URL_DB_SOURCE );
-		String srcUser = props.getProperty( USER_DB_SOURCE );
-		String srcPasswd = props.getProperty( PASSWORD_DB_SOURCE );
+		SRC = src;
+                DST = dst;
 		ignoreEmpty = Boolean.parseBoolean( props.getProperty( ONLY_NOT_EMPTY, "false" ) );
 		
-		CON_SRC = DBConnector.getConnection( SRC_URL, srcUser, srcPasswd, ignoreEmpty );
+		CON_SRC = DBConnector.getConnection( SRC, ignoreEmpty );
 		
-		String destURL = props.getProperty( URL_DB_DESTINATION );
-		String destUser = props.getProperty( USER_DB_DESTINATION );
-		String destPasswd = props.getProperty( PASSWORD_DB_DESTINATION );
-		CON_DEST = DBConnector.getConnection( destURL, destUser, destPasswd, false );
+		CON_DEST = DBConnector.getConnection( DST, false );
 
-		SRC_TR = HelperManager.getTranslator( SRC_URL );
+		SRC_TR = HelperManager.getTranslator( SRC.getUrl() );
 		DEST_TR = HelperManager.getTranslator( props.getProperty( URL_DB_DESTINATION ) );
 		
 		List<Name> v = CON_SRC.getTableList();
