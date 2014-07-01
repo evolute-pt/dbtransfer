@@ -1,5 +1,6 @@
 package pt.evolute.dbtransfer.db.helper;
 
+import java.sql.Blob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -166,8 +167,15 @@ public class NullHelper implements Helper
         }
         else if( type == Types.BLOB || type == Types.LONGVARBINARY || type == Types.VARBINARY )
         {
-//                System.out.println( "SPV BINARY: " + o + " t: " + type );
-            pStm.setBytes( col + 1, ( byte[] )outputValue( o ) );
+            o = outputValue( o );
+            if( o instanceof byte[] )
+            {
+                pStm.setBytes( col + 1, ( byte[] )o );
+            }
+            else
+            {
+                pStm.setBlob( col + 1, ( Blob )o );
+            }
         }
         else
         {
