@@ -122,7 +122,7 @@ public class PostgreSQLServerHelper extends NullHelper
 		return normalize;
 	}
 	
-	@Override
+/*	@Override
 	public void fixSequences( DBConnection con, String table, String typeName, String column )
 		throws Exception
 	{
@@ -170,7 +170,7 @@ public class PostgreSQLServerHelper extends NullHelper
 			}
 		}
 	}
-	
+*/	
 	@Override
 	public String normalizeValue( String value )
 	{
