@@ -100,6 +100,8 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			buff.append(" ADD CONSTRAINT ");
 			ColumnDefinition col0 = fk.columns.remove( 0 );
 			buff.append( fk.getOutputName() );
+			buff.append( "_" );
+			buff.append( col0.name );
 			buff.append(" FOREIGN KEY ( ");
 			buff.append( col0.name );
 			for( ColumnDefinition col: fk.columns )
