@@ -69,6 +69,10 @@ public class Analyser implements Constants
 				}
 				buff.append( DEST_TR.outputName( def.name.saneName ) );
 				buff.append( " " );
+				if( def.sqlSize != null && def.sqlSize > 10485760 )
+				{
+					def.sqlSize = 10485760;
+				}
 				buff.append( translate( def.sqlTypeName, def.sqlSize ) );
 /*				if( def.sqlSize != null )
 				{
