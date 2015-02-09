@@ -39,7 +39,7 @@ public class SQLServerHelper extends NullHelper
 		NORMALIZE.put( "smallint identity", "serial" );
 //		NORMALIZE.put( "uniqueidentifier", "uuid" );
 		NORMALIZE.put( "uniqueidentifier", "varchar" );
-//		NORMALIZE.put( "tinyint", "smallint" );
+		NORMALIZE.put( "tinyint identity", "smallint" );
 		NORMALIZE.put( "image", "bytea" );
 		NORMALIZE.put( "nvarchar", "varchar" );
 		NORMALIZE.put( "ntext", "text" );
