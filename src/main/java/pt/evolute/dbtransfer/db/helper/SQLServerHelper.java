@@ -44,6 +44,7 @@ public class SQLServerHelper extends NullHelper
 		NORMALIZE.put( "nvarchar", "varchar" );
 		NORMALIZE.put( "ntext", "text" );
 		NORMALIZE.put( "binary", "bytea" );
+		NORMALIZE.put( "geography", "bytea" );
 		NORMALIZE.put( "smalldatetime", "datetime" );
 		NORMALIZE.put( "sysname", "varchar" );
 		NORMALIZE.put( "varbinary", "bytea" );
