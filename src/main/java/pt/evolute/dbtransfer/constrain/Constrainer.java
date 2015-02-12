@@ -149,6 +149,11 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			if( !"PRIMARY".equals( uniq.getOriginalName() ) )
 			{
 				StringBuilder buff = new StringBuilder("ALTER TABLE ");
+				if( DST.getSchema() != null )
+				{
+					buff.append( DST.getSchema() );
+					buff.append( "." );
+				}
 				buff.append( table.saneName );
 				buff.append(" ADD CONSTRAINT ");
 				buff.append( uniq.getOutputName() );
@@ -187,6 +192,11 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 		if( !key.columns.isEmpty() )
 		{
 			StringBuilder buff = new StringBuilder("ALTER TABLE ");
+			if( DST.getSchema() != null )
+			{
+				buff.append( DST.getSchema() );
+				buff.append( "." );
+			}
 			buff.append( table.saneName );
 			buff.append(" ADD PRIMARY KEY ( ");
 			buff.append(key.columns.remove(0).name);
@@ -274,7 +284,7 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 				else
 				{
 					DEST_TR.setDefaultValue( CON_DEST, table.saneName, typeName, col.name.saneName, value );
-				{
+				}
 			}
 		}
 		if(col.isNotNull)
