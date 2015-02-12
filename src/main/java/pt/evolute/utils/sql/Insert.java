@@ -35,6 +35,7 @@ public class Insert implements UpdateQuery
 	
 	public Insert( String insertQuery, ConnectionDefinitionBean dst )
 	{
+		DST = dst;
 		iStatement = insertQuery;
 		iTableName = null;
 		iAssignments = null;
@@ -45,6 +46,7 @@ public class Insert implements UpdateQuery
 	
 	public Insert( String tableName, Assignment []assignments, ConnectionDefinitionBean dst )
 	{
+		DST = dst;
 		iStatement = null;
 		iTableName = tableName;
 		iAssignments = assignments;
