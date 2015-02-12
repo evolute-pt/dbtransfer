@@ -27,7 +27,7 @@ public class Constrainer  extends Connector implements Constants
 	
 	private final Name TABLES[];
 	private final ConnectionDefinitionBean SRC;
-        private final ConnectionDefinitionBean DST;
+	private final ConnectionDefinitionBean DST;
 	private final DBConnection CON_SRC;
 	private final DBConnection CON_DEST;
 	
@@ -96,6 +96,11 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 				continue;
 			}
 			StringBuilder buff = new StringBuilder("ALTER TABLE ");
+			if( DST.getSchema() != null )
+			{
+				buff.append( DST.getSchema() );
+				buff.append( "." );
+			}
 			buff.append( table.saneName );
 			buff.append(" ADD CONSTRAINT ");
 			ColumnDefinition col0 = fk.columns.remove( 0 );
@@ -212,7 +217,14 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 		// CORRECT SERIAL
 		String typeName = col.sqlTypeName;
 		
-		DEST_TR.fixSequences( CON_DEST, table.saneName, typeName, col.name.saneName );
+		if( DST.getSchema() != null )
+		{
+			DEST_TR.fixSequences( CON_DEST, DST.getSchema() + "." + table.saneName, typeName, col.name.saneName );
+		}
+		else
+		{
+			DEST_TR.fixSequences( CON_DEST, table.saneName, typeName, col.name.saneName );
+		}
 		
 		String defaultValue = col.defaultValue;
 		if(defaultValue != null)
@@ -255,12 +267,22 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			}
 			if( value != null )
 			{
-				DEST_TR.setDefaultValue( CON_DEST, table.saneName, typeName, col.name.saneName, value );
+				if( DST.getSchema() != null )
+				{
+					DEST_TR.setDefaultValue( CON_DEST, DST.getSchema() + "." + table.saneName, typeName, col.name.saneName, value );
+				}
+				else
+				{
+					DEST_TR.setDefaultValue( CON_DEST, table.saneName, typeName, col.name.saneName, value );
+				{
 			}
 		}
 		if(col.isNotNull)
 		{
-			DEST_TR.setNotNull( CON_DEST, table.saneName, typeName, col.name.saneName, col.sqlSize );
+			if( DST.getSchema() != null )
+			{
+				DEST_TR.setNotNull( CON_DEST, table.saneName, typeName, col.name.saneName, col.sqlSize );
+			}
 		}
 	}
 }
