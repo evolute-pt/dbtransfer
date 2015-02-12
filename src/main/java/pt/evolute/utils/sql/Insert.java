@@ -8,12 +8,15 @@ import pt.evolute.utils.db.ExecuterProvider;
 import pt.evolute.utils.jdbc.StatementExecuterFactory;
 import pt.evolute.utils.sql.backend.Backend;
 import pt.evolute.utils.sql.backend.BackendProvider;
+import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 
 public class Insert implements UpdateQuery
 {
 	private static final int REGULAR = 0;
 	private static final int SELECT = 1;
-
+	
+	private final ConnectionDefinitionBean DST;
+	
 	private final String iTableName;
 	private final Assignment []iAssignments;
 	private final Field []iFields;
@@ -30,7 +33,7 @@ public class Insert implements UpdateQuery
 	
 	private Backend backend = null;
 	
-	public Insert( String insertQuery )
+	public Insert( String insertQuery, ConnectionDefinitionBean dst )
 	{
 		iStatement = insertQuery;
 		iTableName = null;
@@ -40,7 +43,7 @@ public class Insert implements UpdateQuery
 		iInsertType = REGULAR;
 	}
 	
-	public Insert( String tableName, Assignment []assignments )
+	public Insert( String tableName, Assignment []assignments, ConnectionDefinitionBean dst )
 	{
 		iStatement = null;
 		iTableName = tableName;
@@ -51,8 +54,9 @@ public class Insert implements UpdateQuery
 	}
 	
 	public Insert( String tableName, Field []fields,
-					Select select )
+					Select select, ConnectionDefinitionBean dst )
 	{
+		DST = dst;
 		iStatement = null;
 		iTableName = tableName;
 		iAssignments = null;
@@ -83,7 +87,15 @@ public class Insert implements UpdateQuery
 		{
 			return null;
 		}
-		StringBuilder insertStr = new StringBuilder( "INSERT INTO " ).append( iTableName );
+		StringBuilder insertStr = new StringBuilder( "INSERT INTO " );
+		
+		if( DST.getSchema() != null )
+		{
+			insertStr.append( DST.getSchema() );
+			insertStr.append( "." );
+		}
+		
+		insertStr.append( iTableName );
 		
 		switch( iInsertType )
 		{
