@@ -155,6 +155,11 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
             {
                 StringBuilder buff = new StringBuilder( "INSERT INTO " );
                 StringBuilder args = new StringBuilder();
+                if( DST.getSchema() != null )
+                {
+                    buff.append( DST.getSchema() );
+                    buff.append( "." );
+                }
                 buff.append( TABLES[ i ].saneName );
                 buff.append( " ( " );
 
