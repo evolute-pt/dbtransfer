@@ -115,6 +115,11 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 				buff.append(col.name);
 			}
 			buff.append(" ) REFERENCES ");
+			if( DST.getSchema() != null )
+			{
+				buff.append( DST.getSchema() );
+				buff.append( "." );
+			}
 			buff.append(col0.referencedTable);
 			buff.append("( ");
 			buff.append(col0.referencedColumn);
