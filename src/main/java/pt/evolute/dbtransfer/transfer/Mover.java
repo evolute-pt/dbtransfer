@@ -65,10 +65,11 @@ public class Mover extends Connector implements Constants
 System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
 
         CHECK_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_CHECK_DEPS, "false" ) );
+        USE_DEST_FOR_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_USE_DEST_FOR_DEPS, "false" ) );
+        
         List<Name> v = CON_SRC.getTableList();
         if( CHECK_DEPS )
         {
-            USE_DEST_FOR_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_USE_DEST_FOR_DEPS, "false" ) );
             System.out.println( "Reordering tables for dependencies (" + v.size() + " tables)" );
             if( USE_DEST_FOR_DEPS )
             {
