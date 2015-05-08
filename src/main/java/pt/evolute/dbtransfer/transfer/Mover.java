@@ -39,6 +39,7 @@ public class Mover extends Connector implements Constants
     private final DBConnection CON_SRC;
     private final DBConnection CON_DEST;
     private final boolean CHECK_DEPS;
+    private final boolean USE_DEST_FOR_DEPS;
     private final boolean ESCAPE_UNICODE;
 
     private static final long MAX_MEM = Runtime.getRuntime().maxMemory();
@@ -67,8 +68,16 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
         List<Name> v = CON_SRC.getTableList();
         if( CHECK_DEPS )
         {
+            USE_DEST_FOR_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_USE_DEST_FOR_DEPS, "false" ) );
             System.out.println( "Reordering tables for dependencies (" + v.size() + " tables)" );
-            v = reorder( v );
+            if( USE_DEST_FOR_DEPS )
+            {
+                v = reorder( CON_DEST.getTableList() );
+            }
+            else
+            {
+                v = reorder( v );
+            }
         }
         TABLES = v.toArray( new Name[ v.size() ] );
     }
