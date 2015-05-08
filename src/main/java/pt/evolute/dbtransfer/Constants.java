@@ -34,6 +34,7 @@ public interface Constants
     public static String TRANSFER_THREADS = "TRANSFER.THREADS";
     public static String TRANSFER_ESCAPE_UNICODE = "TRANSFER.ESCAPE_UNICODE";
     public static String TRANSFER_CHECK_DEPS = "TRANSFER.CHECK_DEPS";
+    public static String TRANSFER_USE_DEST_FOR_DEPS = "TRANSFER.USE_DEST_FOR_DEPS";
 
     public static String CONSTRAIN = "CONSTRAIN";
 
