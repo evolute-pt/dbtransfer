@@ -243,7 +243,7 @@ public class Diff extends Connector implements Constants
 		assigns[ rowData.length + 1 ] = new Assignment( COLUMN_MODIFIED_COMMENT, "comment" );
 		assigns[ rowData.length + 2 ] = new Assignment( COLUMN_MODIFIED_STAMP, new Timestamp( System.currentTimeMillis() ) );
 		
-		Insert insert = new Insert( table.toString(), assigns );
+		Insert insert = new Insert( table.toString(), assigns, DST );
 		insert.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
 		CON_DEST.executeQuery( insert.toString() );
 	}
