@@ -61,7 +61,7 @@ public class MySQLServerHelper extends NullHelper
 //		UnicodeChecker.setUseDoubleSlash( true );
 		if( "true".equals( HelperManager.getProperties().get( MYSQL_NORMALIZE_ENUM_TEXT ) ) )
 		{
-			
+			NORMALIZE.put( "enum", "text" )
 		}
 	}
 	
