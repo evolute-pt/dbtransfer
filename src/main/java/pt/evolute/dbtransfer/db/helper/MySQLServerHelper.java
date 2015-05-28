@@ -59,7 +59,12 @@ public class MySQLServerHelper extends NullHelper
 		}
 //		System.out.println( "MySQL helper - setting double slash on UnicodeChecker" );
 //		UnicodeChecker.setUseDoubleSlash( true );
+		if( "true".equals( HelperManager.getProperties().get( MYSQL_NORMALIZE_ENUM_TEXT ) ) )
+		{
+			
+		}
 	}
+	
 	
 	public static MySQLServerHelper getTranslator()
 	{
