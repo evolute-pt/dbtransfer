@@ -30,7 +30,7 @@ public class PostgreSQLServerHelper extends NullHelper
 		
 		RESERVED.put( "order", "order" );
 		RESERVED.put( "user", "user" );
-		
+		RESERVED.put( "end", "end" );
 		NORMALIZE.put( "int4", "int" );
 		NORMALIZE.put( "timestamp", "datetime" );
 		NORMALIZE.put( "timestamptz", "datetimetz" );
