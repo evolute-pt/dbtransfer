@@ -272,12 +272,15 @@ public class JDBCConnection implements DBConnection
     public Virtual2DArray getFullTable( Name table ) throws Exception
     {
             List<ColumnDefinition> cols = getColumnList( table );
-            StringBuilder buffer = new StringBuilder( cols.get( 0 ).name.originalName );
+            StringBuilder buffer = new StringBuilder( "\"" );
+            buffer.append( cols.get( 0 ).name.originalName );
+            buffer.append( "\"" );
             for( int i = 1; i < cols.size(); ++i )
             {
                 ColumnDefinition col = cols.get( i );
-                    buffer.append( ", " );
+                    buffer.append( ", \"" );
                     buffer.append( col.name.originalName );
+                    buffer.append( "\"" );
             }
             return executeQuery( "SELECT " + buffer + " FROM " + table.originalName );
     }
