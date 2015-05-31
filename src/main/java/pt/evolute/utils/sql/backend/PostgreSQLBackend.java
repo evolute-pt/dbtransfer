@@ -24,6 +24,7 @@ public class PostgreSQLBackend extends DefaultBackend
 		registerReservedKeyword( "order" );
 		registerReservedKeyword( "table" );
 		registerReservedKeyword( "end" );
+		registerReservedKeyword( "interval" );
 	}
 	
 	@Override

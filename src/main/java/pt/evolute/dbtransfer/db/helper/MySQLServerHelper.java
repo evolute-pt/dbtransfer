@@ -32,7 +32,8 @@ public class MySQLServerHelper extends NullHelper
 //		RESERVED.put( "order", "order" );
 //		RESERVED.put( "user", "user" );
 //		RESERVED.put( "end", "end" );
-//		
+		RESERVED.put( "interval", "interval" );
+		
 //		NORMALIZE.put( "int4", "int" );
 //		NORMALIZE.put( "timestamp", "timestamp without time zone" );
 //		NORMALIZE.put( "timestamptz", "datetimetz" );
@@ -65,10 +66,10 @@ public class MySQLServerHelper extends NullHelper
 		}
 //		System.out.println( "MySQL helper - setting double slash on UnicodeChecker" );
 //		UnicodeChecker.setUseDoubleSlash( true );
-//		if( "true".equals( HelperManager.getProperties().get( MYSQL_NORMALIZE_ENUM_TEXT ) ) )
-//		{
+		if( "true".equals( HelperManager.getProperties().get( MYSQL_NORMALIZE_ENUM_TEXT ) ) )
+		{
 		NORMALIZE.put( "enum", "text" );
-//		}
+		}
 	}
 	
 	

@@ -31,6 +31,8 @@ public class PostgreSQLServerHelper extends NullHelper
 		RESERVED.put( "order", "order" );
 		RESERVED.put( "user", "user" );
 		RESERVED.put( "end", "end" );
+		RESERVED.put( "interval", "interval");
+		
 		NORMALIZE.put( "int4", "int" );
 		NORMALIZE.put( "timestamp", "datetime" );
 		NORMALIZE.put( "timestamptz", "datetimetz" );
@@ -103,6 +105,7 @@ public class PostgreSQLServerHelper extends NullHelper
 		{
 			name = name.replace( '.', '_' );
 		}
+
 //		name = StringPlainer.convertString( name );
 		if( RESERVED.containsKey( name ) )
 		{
