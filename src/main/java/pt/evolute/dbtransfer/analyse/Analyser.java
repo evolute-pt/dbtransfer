@@ -58,6 +58,11 @@ public class Analyser implements Constants
 		{
 			List<ColumnDefinition> list = CON_SRC.getColumnList( TABLES[ i ] );
 			StringBuilder buff = new StringBuilder( "CREATE TABLE " );
+			if( DST.getSchema() != null )
+			{
+				buff.append( DST.getSchema() );
+				buff.append( "." );
+			}
 			buff.append( TABLES[ i ].saneName );
 			buff.append( " ( " );
 			int j = 0;
@@ -69,6 +74,10 @@ public class Analyser implements Constants
 				}
 				buff.append( DEST_TR.outputName( def.name.saneName ) );
 				buff.append( " " );
+				if( def.sqlSize != null && def.sqlSize > 10485760 )
+				{
+					def.sqlSize = 10485760;
+				}
 				buff.append( translate( def.sqlTypeName, def.sqlSize ) );
 /*				if( def.sqlSize != null )
 				{
@@ -84,7 +93,15 @@ public class Analyser implements Constants
 				++j;
 			}
 			buff.append( " ) " );
+			if( DST.getSchema() != null )
+			{
+			v2.add( "DROP TABLE " + DST.getSchema() + "." + TABLES[ i ] + " CASCADE" );
+			}
+			else
+			{
 			v2.add( "DROP TABLE " + TABLES[ i ] + " CASCADE" );
+			}
+			
 			v.add( buff );
 		}
 		

@@ -17,6 +17,7 @@ public class MySQLServerHelper extends NullHelper
 	private static final Map<String,String> DEFAULTS = new HashMap<String,String>();
 	private static final Map<String,String> NORMALIZE_DEFAULTS = new HashMap<String,String>();
 	private static final String MYSQL_NORMALIZE_BIT_BOOLEAN = "MYSQL.NORMALIZE.BIT_BOOLEAN";
+	private static final String MYSQL_NORMALIZE_ENUM_TEXT = "MYSQL.NORMALIZE.ENUM_TEXT";
 	
 	static
 	{
@@ -30,15 +31,21 @@ public class MySQLServerHelper extends NullHelper
 //		
 //		RESERVED.put( "order", "order" );
 //		RESERVED.put( "user", "user" );
-//		
+//		RESERVED.put( "end", "end" );
+		RESERVED.put( "interval", "interval" );
+		
 //		NORMALIZE.put( "int4", "int" );
-//		NORMALIZE.put( "timestamp", "datetime" );
+//		NORMALIZE.put( "timestamp", "timestamp without time zone" );
 //		NORMALIZE.put( "timestamptz", "datetimetz" );
 //		NORMALIZE.put( "bool", "boolean" );
 //		NORMALIZE.put( "bpchar", "char" );
 //		NORMALIZE.put( "float8", "float" );
 //		NORMALIZE.put( "bytea", "blob" );
-
+//		NORMALIZE.put( "enum", "text" );
+		NORMALIZE.put( "mediumtext", "text" );
+		NORMALIZE.put( "longtext", "text" );
+		NORMALIZE.put( "tinytext", "text" );
+		
 //		DEFAULTS.put( "'(newsequentialid())'", "" );
 //		DEFAULTS.put( "'(' ')'", "' '" );
 //		DEFAULTS.put( "'('S')'", "'S'" );
@@ -59,7 +66,12 @@ public class MySQLServerHelper extends NullHelper
 		}
 //		System.out.println( "MySQL helper - setting double slash on UnicodeChecker" );
 //		UnicodeChecker.setUseDoubleSlash( true );
+		if( "true".equals( HelperManager.getProperties().get( MYSQL_NORMALIZE_ENUM_TEXT ) ) )
+		{
+		NORMALIZE.put( "enum", "text" );
+		}
 	}
+	
 	
 	public static MySQLServerHelper getTranslator()
 	{

@@ -30,6 +30,8 @@ public class PostgreSQLServerHelper extends NullHelper
 		
 		RESERVED.put( "order", "order" );
 		RESERVED.put( "user", "user" );
+		RESERVED.put( "end", "end" );
+		RESERVED.put( "interval", "interval");
 		
 		NORMALIZE.put( "int4", "int" );
 		NORMALIZE.put( "timestamp", "datetime" );
@@ -103,6 +105,7 @@ public class PostgreSQLServerHelper extends NullHelper
 		{
 			name = name.replace( '.', '_' );
 		}
+
 //		name = StringPlainer.convertString( name );
 		if( RESERVED.containsKey( name ) )
 		{
@@ -122,7 +125,7 @@ public class PostgreSQLServerHelper extends NullHelper
 		return normalize;
 	}
 	
-	@Override
+/*	@Override
 	public void fixSequences( DBConnection con, String table, String typeName, String column )
 		throws Exception
 	{
@@ -170,7 +173,7 @@ public class PostgreSQLServerHelper extends NullHelper
 			}
 		}
 	}
-	
+*/	
 	@Override
 	public String normalizeValue( String value )
 	{
