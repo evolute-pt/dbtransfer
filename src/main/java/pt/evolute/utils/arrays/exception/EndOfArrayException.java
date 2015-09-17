@@ -12,5 +12,10 @@ package pt.evolute.utils.arrays.exception;
  */
 public class EndOfArrayException extends RuntimeException
 {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8951121841780724137L;
     
 }

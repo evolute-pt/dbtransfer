@@ -1,5 +1,6 @@
 package pt.evolute.dbtransfer.transfer;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,6 +30,9 @@ import pt.evolute.utils.arrays.exception.EndOfArrayException;
  */
 public class Mover extends Connector implements Constants
 {
+	public final long MAX_READ_ROWS;
+	public final boolean IGNORE_BLOB;
+	
     public static final int MAX_BATCH_ROWS = 1024;
     public static final int MAX_SHARED_ROWS = 1000000;
 
@@ -66,6 +70,29 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
 
         CHECK_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_CHECK_DEPS, "false" ) );
         USE_DEST_FOR_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_USE_DEST_FOR_DEPS, "false" ) );
+        IGNORE_BLOB = "true".equalsIgnoreCase( props.getProperty( TRANSFER_IGNORE_BLOBS, "false" ) );
+        if( IGNORE_BLOB )
+        {
+        	System.out.println( "Ignoring BLOBS" );
+        }
+        String str = props.getProperty( TRANSFER_MAX_READ_ROWS );
+        long maxRead = Long.MAX_VALUE;
+        if( str != null && !str.isEmpty() )
+        {
+        	try
+        	{
+        		maxRead = Long.parseLong( str );
+        	}
+        	catch( NumberFormatException ex )
+        	{
+        		System.out.println( "Invalid property: " + Constants.TRANSFER_MAX_READ_ROWS + " - " + str );
+        	}
+        }
+        MAX_READ_ROWS = maxRead;
+        if( MAX_READ_ROWS != Long.MAX_VALUE )
+        {
+        	System.out.println( "Max read rows: " + MAX_READ_ROWS );
+        }
         
         List<Name> v = CON_SRC.getTableList();
         if( CHECK_DEPS )
@@ -155,7 +182,7 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
         for( int i = 0; i < TABLES.length; ++i )
         {
             Virtual2DArray rs = CON_SRC.getFullTable( TABLES[ i ] );
-            System.out.println( "Moving table: " + TABLES[ i ] + " (" + /*rs.rowCount()*/ "NA" + " rows)" );
+            System.out.println( "Moving table: " + TABLES[ i ] );//+ " (" + rs.rowCount() + " rows)" );
             boolean hasData = rs != null;
             if( hasData  )
             {
@@ -173,22 +200,6 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
                 {
                     System.out.println( "NO COLUMNS FOR: " + TABLES[ i ] );
                 }
-                for( int j = 0; j < columns.size(); ++j )
-                {
-                    if( j != 0 )
-                    {
-                        buff.append( ", " );
-                        args.append( ", " );
-                    }
-                    buff.append( tr.outputName( columns.get( j ).name.saneName ) );
-                    args.append( "?" );
-                }
-                buff.append( " ) VALUES ( " );
-                buff.append( args );
-                buff.append( " )" );
-                String insert = buff.toString();
-//			PreparedStatement pstm = CON_DEST.prepareStatement( insert );
-System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert + " colList.sz: " + columns.size() );
                 int typesCache[] = new int[ columns.size() ];
                 for( int j = 0; j < columns.size(); ++j )
                 {
@@ -198,10 +209,33 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                         System.out.println( "Can't resolve Type: " + columns.get( j ).name + " / " + columns.get( j ).sqlTypeName );
                     }
                 }
+                for( int j = 0; j < columns.size(); ++j )
+                {
+                	if( !IGNORE_BLOB 
+                    		|| ( typesCache[ j ] != Types.BLOB
+                    		&& typesCache[ j ] != Types.LONGVARBINARY 
+                    		&& typesCache[ j ] != Types.VARBINARY ) )
+                	{
+	                    if( j != 0 )
+	                    {
+	                        buff.append( ", " );
+	                        args.append( ", " );
+	                    }
+	                    buff.append( tr.outputName( columns.get( j ).name.saneName ) );
+	                    args.append( "?" );
+                	}
+                }
+                buff.append( " ) VALUES ( " );
+                buff.append( args );
+                buff.append( " )" );
+                String insert = buff.toString();
+//			PreparedStatement pstm = CON_DEST.prepareStatement( insert );
+System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert + " colList.sz: " + columns.size() );
+                
                 // TODO - do only if table has identity (when target is sqlserver)
                 String pre = tr.preLoadSetup( TABLES[ i ].saneName );
                 String post = tr.postLoadSetup( TABLES[ i ].saneName );
-                AsyncStatement astm = new AsyncStatement( typesCache, CON_DEST, insert, TABLES[ i ].saneName, pre, post );
+                AsyncStatement astm = new AsyncStatement( typesCache, CON_DEST, insert, TABLES[ i ].saneName, pre, post, IGNORE_BLOB );
                 threads.add( astm );
                 int rows = 0;
 
@@ -210,13 +244,20 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                 {
                     for( int j = 0; j < typesCache.length; ++j )
                     {
-                        Object data = rs.get( row, j );
-                        if( ESCAPE_UNICODE && data != null 
-                                        && data instanceof String )
+                        Object data = null;
+                        if( !IGNORE_BLOB 
+                        		|| ( typesCache[ j ] != Types.BLOB
+                        		&& typesCache[ j ] != Types.LONGVARBINARY 
+                        		&& typesCache[ j ] != Types.VARBINARY ) )
                         {
-                            data = UnicodeChecker.parseToUnicode( ( String )data );
+	                        	data = rs.get( row, j );
+	                        if( ESCAPE_UNICODE && data != null 
+	                                        && data instanceof String )
+	                        {
+	                            data = UnicodeChecker.parseToUnicode( ( String )data );
+	                        }
+	                        TEMP.add( data );
                         }
-                        TEMP.add( data );
 //					pstm.setObject( j, rs.getObject( j ), rsmd.getColumnType( j ) );
                     }
                     ++rows;
@@ -242,7 +283,7 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                         }
                     }
                     ++row;
-                    hasData = testRow( rs, row );
+                    hasData = row < MAX_READ_ROWS && testRow( rs, row );
                 }
                 System.out.println( "Done reading table: " + TABLES[ i ].saneName + " (" + rows + " rows read)" );
                 astm.stopThread();

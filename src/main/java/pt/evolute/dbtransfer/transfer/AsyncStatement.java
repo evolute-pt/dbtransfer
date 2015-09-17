@@ -2,6 +2,7 @@ package pt.evolute.dbtransfer.transfer;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -37,6 +38,9 @@ public class AsyncStatement extends Thread
     private final String postSetup;
     private final Helper destHelper;
 
+    private final Boolean IGNORE_BLOB;
+    private final int EFFECTIVE_COLUMNS;
+    
     private boolean run = true;
 
     private boolean sleep = false;
@@ -51,16 +55,20 @@ public class AsyncStatement extends Thread
  * @param preSetup pre-exec query
  * @param postSetup post-exec query*/
     public AsyncStatement( int types[], DBConnection con, String insert, String threadId, 
-                    String preSetup, String postSetup )
+                    String preSetup, String postSetup, boolean ignoreBlob )
     {
         this.preSetup = preSetup;
         this.postSetup = postSetup;
         this.destHelper = con.getHelper();
+        IGNORE_BLOB = ignoreBlob;
         id = threadId;
         colTypes = types;
         CONN = con;
         INSERT = insert;
         setName( "AsyncStatement " + id );
+        
+        EFFECTIVE_COLUMNS = calculateEffectiveColumns( IGNORE_BLOB, types );
+        
         synchronized( R_THREADS )
         {
             if( R_THREADS.size() >= PARALLEL_THREADS )
@@ -76,7 +84,29 @@ public class AsyncStatement extends Thread
 System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + isAlive() );
     }
 
-    @Override
+    private static int calculateEffectiveColumns( boolean noBlob, int[] types) 
+    {
+		int cols = 0;
+		if( noBlob )
+		{
+			for( int i = 0; i < types.length; ++i )
+			{
+				if( types[ i ] != Types.BLOB
+                		&& types[ i ] != Types.LONGVARBINARY 
+                		&& types[ i ] != Types.VARBINARY )
+                {
+                	++cols;
+                }
+			}
+		}
+		else
+		{
+			cols = types.length;
+		}
+    	return cols;
+	}
+
+	@Override
     public void run()
     {
         System.out.println( "\nStarting " + getName() );
@@ -88,13 +118,16 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
                     CONN.executeQuery( preSetup );
             }
             int rows = 0;
+            
             PreparedStatement pStm = CONN.prepareStatement( INSERT );
+            CONN.executeQuery( "BEGIN;" );
             // enquanto a thread nao for parada
             // ou tiver dados locais
             // ou ainda houver dados no buffer partilhado
             boolean rowOK = false;
             while( run || !PRIVATE_DATA.isEmpty() || !DATA_SHARED.isEmpty() )
             {
+            	
                 checkData();
                 rowOK = addRowToStatement( pStm );
                 //for de objectos numa linha
@@ -104,9 +137,25 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
                     writeRows = rows;
                     if( ( rows % Mover.MAX_BATCH_ROWS ) == 0 /* && OK */ )
                     {
-//                        System.out.print( "-" + id + "." + ( rows / Mover.MAX_BATCH_ROWS ) );
-                        pStm.executeBatch();
-                        rowOK = false;
+                    	try
+                    	{
+                    		if( pStm.isClosed() || !pStm.getConnection().isValid( 5 ) )
+                    		{
+                    			pStm = CONN.prepareStatement( INSERT );
+                    			CONN.executeQuery( "BEGIN;" );
+                    		}
+                    	}
+                    	catch( SQLException ex )
+                    	{
+                    		pStm = CONN.prepareStatement( INSERT );
+                    		CONN.executeQuery( "BEGIN;" );
+                    	}
+//                      System.out.print( "-" + id + "." + ( rows / Mover.MAX_BATCH_ROWS ) );
+                        
+                    	pStm.executeBatch();
+                    	CONN.executeQuery( "COMMIT;" );
+                    	CONN.executeQuery( "BEGIN;" );
+                    	rowOK = false;
                     }
                 }
             }
@@ -114,6 +163,7 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
             {
 //                    System.out.print( "|" + id );
                 pStm.executeBatch();
+                CONN.executeQuery( "COMMIT;" );
                 pStm.close();
             }
             System.out.println( "Done writing table: " + id + " (" + rows + " rows written)" );
@@ -127,7 +177,8 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
         catch( Exception ex )
         {
             System.out.println( "EX in: " + id + " " + INSERT.substring( 0, 30 ) );
-            ex.printStackTrace();
+            ex.printStackTrace( System.out );
+            ex.printStackTrace( System.err );
             if( ex instanceof SQLException )
             {
                 SQLException sex = ( SQLException )ex;
@@ -154,14 +205,14 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
 
     private void checkData()
     {
-        if( PRIVATE_DATA.size() < colTypes.length )
+        if( PRIVATE_DATA.size() < EFFECTIVE_COLUMNS )
         {
             synchronized(DATA_SHARED)
             {
                 PRIVATE_DATA.addAll(DATA_SHARED);
                 DATA_SHARED.clear();
             }
-            if( PRIVATE_DATA.size() < colTypes.length )
+            if( PRIVATE_DATA.size() < EFFECTIVE_COLUMNS )
             {
                 if( run )
                 {
@@ -174,14 +225,22 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
     private boolean addRowToStatement(PreparedStatement pStm) throws SQLException
     {
         int col = 0;
-        if( PRIVATE_DATA.size() >= colTypes.length )
+        int param;
+        if( PRIVATE_DATA.size() >= EFFECTIVE_COLUMNS )
         {
+        	param = 0;
             for( col = 0; col < colTypes.length; ++col)
             {
-                Object o = PRIVATE_DATA.remove(0);
-                int type = colTypes[col];
-//                System.out.println( "D: " + o + " type: " + type );
-                destHelper.setPreparedValue( pStm, col, o, type );
+            	if( !IGNORE_BLOB 
+                		|| ( colTypes[ col ] != Types.BLOB
+                		&& colTypes[ col ] != Types.LONGVARBINARY 
+                		&& colTypes[ col ] != Types.VARBINARY ) )
+                {
+	                Object o = PRIVATE_DATA.remove(0);
+	                int type = colTypes[col];
+	//                System.out.println( "D: " + o + " type: " + type );
+	                destHelper.setPreparedValue( pStm, param++, o, type );
+                }
             }
         }
         boolean ok = col == colTypes.length;
@@ -247,11 +306,11 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
 
     public int getSharedRowsSize() 
     {
-        return DATA_SHARED.size() / colTypes.length;
+        return DATA_SHARED.size() / EFFECTIVE_COLUMNS;
     }
     
     public int getPrivateRowsSize() 
     {
-        return PRIVATE_DATA.size() / colTypes.length;
+        return PRIVATE_DATA.size() / EFFECTIVE_COLUMNS;
     }
 }

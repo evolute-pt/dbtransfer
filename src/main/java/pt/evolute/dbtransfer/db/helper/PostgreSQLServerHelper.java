@@ -1,13 +1,15 @@
 package pt.evolute.dbtransfer.db.helper;
 
+import java.sql.Blob;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
+import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.utils.arrays.Virtual2DArray;
 import pt.evolute.utils.string.UnicodeChecker;
-import pt.evolute.dbtransfer.db.DBConnection;
 
 public class PostgreSQLServerHelper extends NullHelper
 {
@@ -136,8 +138,10 @@ public class PostgreSQLServerHelper extends NullHelper
 			try
 			{
 				//				System.out.println( "C: " + buff );
+				con.executeQuery( "BEGIN;" );
 				Virtual2DArray rs = con.executeQuery(buff.toString());
 				value = rs.getObjects()[0][0];
+				con.executeQuery( "COMMIT;" );
 			}
 			catch(SQLException ex)
 			{
@@ -158,7 +162,9 @@ public class PostgreSQLServerHelper extends NullHelper
 				try
 				{
 					System.out.println("C: " + buff);
+					con.executeQuery( "BEGIN;" );
 					con.executeQuery(buff.toString());
+					con.executeQuery( "COMMIT;" );
 				}
 				catch(Exception ex)
 				{
@@ -259,4 +265,39 @@ public class PostgreSQLServerHelper extends NullHelper
 		}
 		return norm;
 	}
+    
+    @Override
+    public void setPreparedValue(PreparedStatement pStm, int col, Object o, int type ) 
+            throws SQLException
+    {
+        if( type == Types.BLOB 
+        		|| type == Types.LONGVARBINARY 
+        		|| type == Types.VARBINARY
+        		|| type == Types.BINARY )
+        {
+        	if( o != null )
+        	{
+	            o = outputValue( o );
+	            
+//	            System.out.println( "BLOB class: " + o.getClass() + " Type: " + type + " Col: " + col );
+	            if( o instanceof byte[] )
+	            {
+	                pStm.setBytes( col + 1, ( byte[] )o );
+	            }
+	            else
+	            {
+	            	Blob b = ( Blob )o;
+	                pStm.setBytes( col + 1, b.getBytes( 1, ( int )b.length() ) );
+	            }
+        	}
+        	else
+        	{
+        		pStm.setBytes( col + 1, null );
+        	}
+        }
+        else
+        {
+        	super.setPreparedValue( pStm, col, o, type );
+        }
+    }
 }

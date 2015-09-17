@@ -19,6 +19,10 @@ public class Name
 		{
 			sane = sane.replace( '.', '_' );
 		}
+		if( sane.contains( "\"" ) )
+		{
+			sane = sane.replace( '\"', ' ' ).trim();
+		}
 		saneName = StringPlainer.convertString( sane );
 	}
 	

@@ -10,7 +10,7 @@ import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
 public class OracleServerHelper extends NullHelper
 {
     private static final Map<String,String> OUTPUT = new HashMap<String,String>();
-    private static final Map<String,String> RESERVED = new HashMap<String,String>();
+//    private static final Map<String,String> RESERVED = new HashMap<String,String>();
     private static final Map<String,String> NORMALIZE = new HashMap<String,String>();
     private static final Map<String,String> DEFAULTS = new HashMap<String,String>();
     private static final Map<String,String> NORMALIZE_DEFAULTS = new HashMap<String,String>();
@@ -24,6 +24,7 @@ public class OracleServerHelper extends NullHelper
         NORMALIZE.put( "varchar2", "varchar" );
         NORMALIZE.put( "number", "numeric" );
         NORMALIZE.put( "long", "text" );
+        NORMALIZE.put( "long raw", "blob" );
     }
 
     private static OracleServerHelper translator = null;
@@ -69,8 +70,12 @@ public class OracleServerHelper extends NullHelper
 //		name = StringPlainer.convertString( name );
 //		if( RESERVED.containsKey( name ) )
 //		{
-                name = "\"" + name + "\"";
+//                name = "\"" + name + "\"";
 //		}
+        if( !name.equals( name.toUpperCase() ) )
+        {
+        	name = "\"" + name + "\"";
+        }
         return name;
     }
 

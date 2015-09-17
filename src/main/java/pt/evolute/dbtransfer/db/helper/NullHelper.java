@@ -168,6 +168,7 @@ public class NullHelper implements Helper
         else if( type == Types.BLOB || type == Types.LONGVARBINARY || type == Types.VARBINARY )
         {
             o = outputValue( o );
+            System.out.println( "BLOB class: " + o.getClass() + " Type: " + type );
             if( o instanceof byte[] )
             {
                 pStm.setBytes( col + 1, ( byte[] )o );

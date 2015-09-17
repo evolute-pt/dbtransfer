@@ -88,12 +88,15 @@ public class Analyser implements Constants
 			v.add( buff );
 		}
 		
-                DBConnection destCon = DBConnector.getConnection( DST.getUrl(), DST.getUser(), DST.getPassword(), false, DST.getSchema() );
-		for( int i = 0; i < v.size(); ++i )
+        DBConnection destCon = DBConnector.getConnection( DST.getUrl(), DST.getUser(), DST.getPassword(), false, DST.getSchema() );
+		
+        for( int i = 0; i < v.size(); ++i )
 		{
 			try
 			{
+				destCon.executeQuery( "BEGIN;" );
 				destCon.executeQuery( v2.get( i ) );
+				destCon.executeQuery( "COMMIT;" );
 			}
 			catch( Exception ex )
 			{
@@ -101,7 +104,9 @@ public class Analyser implements Constants
 //				System.out.println( ex.getMessage() );
 			}
 System.out.println( "T: " + v.get( i ) );
+			destCon.executeQuery( "BEGIN;" );
 			destCon.executeQuery( v.get( i ).toString() );
+			destCon.executeQuery( "COMMIT;" );
 		}
 	}
 	

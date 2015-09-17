@@ -156,7 +156,9 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 				buff.append(" )");
 				try
 				{
+					CON_DEST.executeQuery( "BEGIN;" );
 					CON_DEST.executeQuery(buff.toString());
+					CON_DEST.executeQuery( "COMMIT;" );
 				}
 				catch(SQLException ex)
 				{
@@ -192,7 +194,9 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			buff.append(" )");
 			try
 			{
+				CON_DEST.executeQuery( "BEGIN;" );
 				CON_DEST.executeQuery(buff.toString());
+				CON_DEST.executeQuery( "COMMIT;" );
 			}
 			catch(SQLException ex)
 			{
