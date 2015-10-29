@@ -1,0 +1,40 @@
+dbtransfer vs pgloader.io
+
+Aims
+dbtransfer:
+transfer data between jdbc data sources, with support for mdb (MS Access files) sources as fast as possible
+
+pgloader.io
+load data from a few selected sources to postgresql as fast as possible
+
+Data source support
+dbtransfer:
+any jdbc data source support plus mdb files, some data sources have advanced support, meaning some required 
+casts are natively detected by dbtransfer (mdb,oracle,mssql,mysql,pgsql)
+
+pgloader.io:
+only csv,mysql,mssql,dbf,fixed,sqlite,db3,ixf,copy are supported, but support is more complete than dbtransfer
+
+Destination support
+dbtransfer:
+any jdbc data source, with advanced support for mdb,oracle,mssql,mysql,pgsql.
+pgsql is the destination better supported on dbtransfer, but uses same protocol (jdbc/SQL) as the others
+
+pgloader.io:
+pgsql, only destination supported, uses specific (COPY) pgsql funcionality to achieve higher insert rates
+
+Architecture
+dbtransfer:
+really multi-threaded. dbtransfer always uses one reader and one writer threads, with a FIFO between.
+however we can enable as many transfer threads as we like, and dbtransfer will use N readers and N writers,
+one per table, it transfers tables concurrently, because some tables have faster reads and others have faster writes,
+and a FIFO is not enough to have both systems (source and destiny) at full speed, 
+parallel table transfer is a more complete aproach
+data insert is done in bulk inserts (1k rows) using prepared statements and plain SQL
+
+pgloader.io:
+multi-threaded, one reader, FIFO, one writer
+data insert is done using pgsql COPY protocol, is really, really fast
+
+
+PS: Hello Dimitri Fontaine, feel free to complete or correct this comparison
