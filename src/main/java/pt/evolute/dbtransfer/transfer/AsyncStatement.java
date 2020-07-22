@@ -120,7 +120,7 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
             int rows = 0;
             
             PreparedStatement pStm = CONN.prepareStatement( INSERT );
-            CONN.executeQuery( "BEGIN;" );
+            CONN.executeQuery( "BEGIN TRANSACTION;" );
             // enquanto a thread nao for parada
             // ou tiver dados locais
             // ou ainda houver dados no buffer partilhado
@@ -142,19 +142,19 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
                     		if( pStm.isClosed() || !pStm.getConnection().isValid( 5 ) )
                     		{
                     			pStm = CONN.prepareStatement( INSERT );
-                    			CONN.executeQuery( "BEGIN;" );
+                    			CONN.executeQuery( "BEGIN TRANSACTION;" );
                     		}
                     	}
                     	catch( SQLException ex )
                     	{
                     		pStm = CONN.prepareStatement( INSERT );
-                    		CONN.executeQuery( "BEGIN;" );
+                    		CONN.executeQuery( "BEGIN TRANSACTION;" );
                     	}
 //                      System.out.print( "-" + id + "." + ( rows / Mover.MAX_BATCH_ROWS ) );
                         
                     	pStm.executeBatch();
                     	CONN.executeQuery( "COMMIT;" );
-                    	CONN.executeQuery( "BEGIN;" );
+                    	CONN.executeQuery( "BEGIN TRANSACTION;" );
                     	rowOK = false;
                     }
                 }

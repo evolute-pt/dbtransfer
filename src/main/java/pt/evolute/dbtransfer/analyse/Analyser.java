@@ -92,7 +92,7 @@ public class Analyser implements Constants
 		{
 			try
 			{
-				destCon.executeQuery( "BEGIN;" );
+				destCon.executeQuery( "BEGIN TRANSACTION;" );
 				destCon.executeQuery( v2.get( i ) );
 				destCon.executeQuery( "COMMIT;" );
 			}
@@ -103,7 +103,7 @@ public class Analyser implements Constants
 				destCon.executeQuery( "ROLLBACK;" );
 			}
 System.out.println( "T: " + v.get( i ) );
-			destCon.executeQuery( "BEGIN;" );
+			destCon.executeQuery( "BEGIN TRANSACTION;" );
 			destCon.executeQuery( v.get( i ).toString() );
 			destCon.executeQuery( "COMMIT;" );
 		}

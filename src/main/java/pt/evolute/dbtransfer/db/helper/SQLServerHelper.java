@@ -1,6 +1,7 @@
 package pt.evolute.dbtransfer.db.helper;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +11,7 @@ public class SQLServerHelper extends NullHelper
 {
 	private static final int MAX_VARCHAR_BYTES = 8000;
 	
-	private static final Map< String, String > OUTPUT = new HashMap< String, String >();
+	private static final Map< String, String > OUTPUT_TYPE = new HashMap< String, String >();
 	private static final Map< String, String > RESERVED = new HashMap< String, String >();
 	private static final Map< String, String > NORMALIZE = new HashMap< String, String >();
 	private static final Map<String,String> DEFAULTS = new HashMap<String,String>();
@@ -18,12 +19,13 @@ public class SQLServerHelper extends NullHelper
 	
 	static
 	{
-		OUTPUT.put( "serial", "int identity" );
-		OUTPUT.put( "boolean", "bit" );
-		OUTPUT.put( "blob", "image" );
-		OUTPUT.put( "datetimetz", "datetime" );
-		OUTPUT.put( "timestamp", "datetime" );
-		OUTPUT.put( "int8", "bigint" );
+		OUTPUT_TYPE.put( "serial", "int identity" );
+		OUTPUT_TYPE.put( "boolean", "bit" );
+		OUTPUT_TYPE.put( "blob", "image" );
+		OUTPUT_TYPE.put( "datetimetz", "datetime" );
+		OUTPUT_TYPE.put( "timestamp", "datetime" );
+		OUTPUT_TYPE.put( "int8", "bigint" );
+		OUTPUT_TYPE.put( "long", "bigint" );
 		
 		RESERVED.put( "database", "database" );
 		RESERVED.put( "order", "order" );
@@ -74,7 +76,7 @@ public class SQLServerHelper extends NullHelper
 	@Override
 	public String outputType( String type, Integer size )
 	{
-		String output = OUTPUT.get( type );
+		String output = OUTPUT_TYPE.get( type );
 		if( output == null )
 		{
 			output = type;
