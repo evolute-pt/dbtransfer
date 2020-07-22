@@ -20,39 +20,30 @@ import pt.evolute.dbtransfer.transfer.Mover;
  */
 public class Main
 {	
-	public Main( Properties props )
+	public Main()
 		throws Exception
 	{
-		HelperManager.setProperties( props );
 		System.out.println( "BEGIN: " + new Date() );
 		long start = System.currentTimeMillis();
 		
-                ConnectionDefinitionBean srcBean = ConnectionDefinitionBean.loadBean( props, Constants.SOURCE_PROPS );
-                ConnectionDefinitionBean dstBean = ConnectionDefinitionBean.loadBean( props, Constants.DESTINATION_PROPS );
+                ConnectionDefinitionBean srcBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), Constants.SOURCE_PROPS );
+                ConnectionDefinitionBean dstBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), Constants.DESTINATION_PROPS );
                 
-                JDBCConnection.debug = "true".equalsIgnoreCase(props.getProperty( Constants.DEBUG ) );
-		if( "true".equalsIgnoreCase(props.getProperty( Constants.ANALYSE ) ) )
+                JDBCConnection.debug = Config.debug();
+		if( Config.analyse() )
 		{
 			System.out.println( "Analysing" );
-			Analyser a = new Analyser( props, srcBean, dstBean );
+			Analyser a = new Analyser( srcBean, dstBean );
 			a.cloneDB();
 		}
-		if( "true".equalsIgnoreCase(props.getProperty( Constants.TRANSFER ) ) )
+		if( Config.transfer() )
 		{
-                    if( !"true".equalsIgnoreCase( props.getProperty( Constants.TRANSFER_CHECK_DEPS ) ) )
+                    if( !Config.checkDependencies() )
                     {
-			String s = props.getProperty( Constants.TRANSFER_THREADS );
-			try
-			{
-				int i = Integer.parseInt( s );
-				AsyncStatement.PARALLEL_THREADS = i;
-			}
-			catch( Exception ex )
-			{
-			}
-                    }
+                    	AsyncStatement.PARALLEL_THREADS = Config.getParallelThreads();
+			        }
                     System.out.println( "Transfering" );
-                    Mover m = new Mover( props, srcBean, dstBean );
+                    Mover m = new Mover( srcBean, dstBean );
                     try
                     {
                             m.moveDB();
@@ -65,16 +56,16 @@ public class Main
                             throw ex.getNextException();
                     }
 		}
-		if( "true".equalsIgnoreCase( props.getProperty( Constants.CONSTRAIN ) ) )
+		if( Config.constrain() )
 		{
 			System.out.println( "Constraining" );
-			Constrainer c = new Constrainer( props, srcBean, dstBean );
+			Constrainer c = new Constrainer(HelperManager.getProperties(), srcBean, dstBean );
 			c.constrainDB();
 		}
-		if( "true".equalsIgnoreCase( props.getProperty( Constants.DIFF ) ) )
+		if( Config.diff() )
 		{
 			System.out.println( "Diffing" );
-			Diff d = new Diff( props, srcBean, dstBean );
+			Diff d = new Diff( srcBean, dstBean );
 			d.diffDb();
 		}
 			System.out.println( "END: " + new Date() );
@@ -99,7 +90,9 @@ public class Main
 				Properties p = new Properties();
 				p.load( new FileInputStream( args[ 0 ] ) );
 				p.list( System.out );
-				new Main( p );
+				Config.setProperties( p );
+				HelperManager.setProperties( p );
+				new Main();
 			}
 			catch( Throwable th )
 			{
@@ -107,7 +100,7 @@ public class Main
 				th.printStackTrace( System.out );
 				try
 				{
-					Thread.sleep( 1500 );
+					Thread.sleep( 500 );
 				}
 				catch( InterruptedException ex )
 				{

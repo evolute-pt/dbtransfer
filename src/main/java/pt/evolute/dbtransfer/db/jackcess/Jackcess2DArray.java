@@ -3,10 +3,11 @@ package pt.evolute.dbtransfer.db.jackcess;
 import java.util.List;
 import java.util.Map;
 
-import pt.evolute.utils.arrays.Virtual2DArray;
-
 import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.Table;
+
+import pt.evolute.utils.arrays.Virtual2DArray;
+import pt.evolute.utils.arrays.exception.EndOfArrayException;
 
 /**
  *
@@ -24,7 +25,7 @@ public class Jackcess2DArray implements Virtual2DArray
 	public Jackcess2DArray( Table t )
 	{
 		table = t;
-		List<Column> columns = table.getColumns();
+		List<? extends Column> columns = table.getColumns();
 		columnNames = new String[ columns.size() ];
 		for( int i = 0; i < columns.size(); ++i )
 		{
@@ -47,6 +48,11 @@ public class Jackcess2DArray implements Virtual2DArray
 			catch( Exception ex )
 			{
 				ex.printStackTrace();
+			}
+			if( currentRowMap == null && r == table.getRowCount() )
+			{
+				throw new EndOfArrayException();
+//				System.out.println( "CurrentRowMap is null!!!! r=" + r + " total=" + table.getRowCount() );
 			}
 		}
 		if( r == currentRow )

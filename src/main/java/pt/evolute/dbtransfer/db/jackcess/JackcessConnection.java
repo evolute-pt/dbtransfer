@@ -9,12 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import pt.evolute.utils.arrays.Virtual2DArray;
-import pt.evolute.utils.dbmodel.DBTable;
-
 import com.healthmarketscience.jackcess.Database;
+import com.healthmarketscience.jackcess.DatabaseBuilder;
 import com.healthmarketscience.jackcess.Index;
-import com.healthmarketscience.jackcess.IndexData.ColumnDescriptor;
 import com.healthmarketscience.jackcess.Table;
 
 import pt.evolute.dbtransfer.db.DBConnection;
@@ -25,6 +22,8 @@ import pt.evolute.dbtransfer.db.beans.PrimaryKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.UniqueDefinition;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.jackcess.beans.TableDefinition;
+import pt.evolute.utils.arrays.Virtual2DArray;
+import pt.evolute.utils.dbmodel.DBTable;
 
 /**
  *
@@ -40,7 +39,7 @@ public class JackcessConnection implements DBConnection {
 
     public JackcessConnection(String url, String user, String pass, boolean onlyNotEmpty)
             throws Exception {
-        db = Database.open(new File(url.split(":")[ 1]));
+        db = DatabaseBuilder.open(new File(url.substring( 9 )));
         ignoreEmpty = onlyNotEmpty;
     }
 
@@ -115,7 +114,7 @@ public class JackcessConnection implements DBConnection {
         for (Index idx : db.getTable(table.originalName).getIndexes()) {
             if (idx.isUnique()) {
                 UniqueDefinition uniq = new UniqueDefinition(idx.getName(), table);
-                for (ColumnDescriptor col : idx.getColumns()) {
+                for (Index.Column col : idx.getColumns()) {
                     uniq.columns.add(col.getName().toLowerCase());
                 }
             }

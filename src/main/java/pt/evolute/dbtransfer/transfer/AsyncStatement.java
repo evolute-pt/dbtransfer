@@ -248,6 +248,10 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
         {
             pStm.addBatch();
         }
+        else
+        {
+        	System.out.println( "Row NOT ok! " + col + "/" + colTypes.length );
+        }
         return ok;
     }
 
@@ -282,7 +286,7 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
 
     public static int waitingThreads()
     {
-        return THREADS.size();
+        return THREADS.size() + R_THREADS.size();
     }
     
     public boolean isSleeping()

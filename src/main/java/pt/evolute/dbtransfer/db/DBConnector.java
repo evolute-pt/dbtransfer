@@ -1,6 +1,7 @@
 package pt.evolute.dbtransfer.db;
 
 import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
+import pt.evolute.dbtransfer.db.dummy.DummyConnection;
 import pt.evolute.dbtransfer.db.jackcess.JackcessConnection;
 import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
 
@@ -27,6 +28,10 @@ public class DBConnector
 		else if( url.startsWith( "jackcess:" ) )
 		{
 			con = new JackcessConnection( url, usr, pass, onlyNotEmpty );
+		}
+		else if( url.startsWith( "dummy:" ) )
+		{
+			con = new DummyConnection( url, usr, pass, onlyNotEmpty );
 		}
 		return con;
 	}

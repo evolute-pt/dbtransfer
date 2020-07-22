@@ -137,7 +137,14 @@ public class JDBCConnection implements DBConnection
 	            	if( "elo_log".equalsIgnoreCase( table ) 
 	            			|| "iri_sessao".equalsIgnoreCase( table )
 	            			|| "iri_ses_output".equalsIgnoreCase( table )
-	            			|| "iri_transaccao".equalsIgnoreCase( table ) )
+	            			|| "iri_transaccao".equalsIgnoreCase( table )
+	            			|| "sql_features".equalsIgnoreCase( table ) 
+	            			|| "sql_implementation_info".equalsIgnoreCase( table )
+	            			|| "sql_languages".equalsIgnoreCase( table )
+	            			|| "sql_packages".equalsIgnoreCase( table )
+	            			|| "sql_parts".equalsIgnoreCase( table )
+	            			|| "sql_sizing".equalsIgnoreCase( table )
+	            			|| "sql_sizing_profiles".equalsIgnoreCase( table ))
 	            	{
 	            		continue;
 	            	}
@@ -145,6 +152,7 @@ public class JDBCConnection implements DBConnection
 	                {
 	                        continue;
 	                }
+	                System.out.println( "Loading table: <" + table + ">" );
 	                LIST_TABLES.add( n );
 	            }
 	        }
@@ -226,7 +234,7 @@ public class JDBCConnection implements DBConnection
             System.out.println( "SQL: " + sql );
         }
         testInitConnection();
-        Statement stm = connection.createStatement( ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY );
+        Statement stm = connection.createStatement( ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY );
         helper.setupStatement( stm );
         Virtual2DArray ret = null;
         try

@@ -2,8 +2,8 @@ package pt.evolute.dbtransfer.analyse;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
+import pt.evolute.dbtransfer.Config;
 import pt.evolute.dbtransfer.Constants;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
@@ -24,7 +24,6 @@ public class Analyser implements Constants
         private final ConnectionDefinitionBean DST;
 	private final DBConnection CON_SRC;
 //	private final DatabaseMetaData DB_META;
-	private final Properties PROPS;
 	
 	private final Helper SRC_TR;
 	private final Helper DEST_TR;
@@ -32,21 +31,20 @@ public class Analyser implements Constants
 	/** Creates a new instance of Analyser
      * @param props
      * @throws java.lang.Exception */
-	public Analyser( Properties props, ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
+	public Analyser( ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
 		throws Exception
 	{
-		PROPS = props;
 		SRC = src;
                 DST = dst;
                 
-                boolean ignoreEmpty = Boolean.parseBoolean( PROPS.getProperty( ONLY_NOT_EMPTY, "false" ) );
+                boolean ignoreEmpty = Config.ignoreEmpty();
                 
 		CON_SRC = DBConnector.getConnection( SRC.getUrl(), SRC.getUser(), SRC.getPassword(), ignoreEmpty, SRC.getSchema() );
 		List<Name> v = CON_SRC.getTableList();
 		TABLES = v.toArray( new Name[ v.size() ] );
 		
 		SRC_TR = HelperManager.getTranslator( SRC.getUrl() );
-		DEST_TR = HelperManager.getTranslator( props.getProperty( URL_DB_DESTINATION ) );
+		DEST_TR = HelperManager.getTranslator( DST.getUrl() );
 	}
 	
 	public void cloneDB()
@@ -101,7 +99,8 @@ public class Analyser implements Constants
 			catch( Exception ex )
 			{
 				// table didn't exist
-//				System.out.println( ex.getMessage() );
+				System.out.println( ex.getMessage() );
+				destCon.executeQuery( "ROLLBACK;" );
 			}
 System.out.println( "T: " + v.get( i ) );
 			destCon.executeQuery( "BEGIN;" );

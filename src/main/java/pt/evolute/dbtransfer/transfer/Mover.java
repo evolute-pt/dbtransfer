@@ -6,11 +6,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
-import pt.evolute.utils.arrays.Virtual2DArray;
-import pt.evolute.utils.db.Connector;
-import pt.evolute.utils.string.UnicodeChecker;
+import pt.evolute.dbtransfer.Config;
 import pt.evolute.dbtransfer.Constants;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
@@ -21,7 +18,10 @@ import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
 import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
+import pt.evolute.utils.arrays.Virtual2DArray;
 import pt.evolute.utils.arrays.exception.EndOfArrayException;
+import pt.evolute.utils.db.Connector;
+import pt.evolute.utils.string.UnicodeChecker;
 
 
 /**
@@ -55,27 +55,27 @@ public class Mover extends Connector implements Constants
 //	private static int oom = 0;
 
     /** Creates a new instance of Mover */
-    public Mover( Properties props, ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
+    public Mover( ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
             throws Exception
     {
         SRC = src;
         DST = dst;
-        ESCAPE_UNICODE = "true".equals( props.getProperty( TRANSFER_ESCAPE_UNICODE ) );
-        boolean ignoreEmpty = Boolean.parseBoolean( props.getProperty( ONLY_NOT_EMPTY, "false" ) );
+        ESCAPE_UNICODE = Config.escapeUnicode();
+        boolean ignoreEmpty = Boolean.parseBoolean( HelperManager.getProperties().getProperty( ONLY_NOT_EMPTY, "false" ) );
 
         CON_SRC = DBConnector.getConnection( SRC, ignoreEmpty );
 
         CON_DEST = DBConnector.getConnection( DST, false );
 System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
 
-        CHECK_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_CHECK_DEPS, "false" ) );
-        USE_DEST_FOR_DEPS = "true".equalsIgnoreCase( props.getProperty( TRANSFER_USE_DEST_FOR_DEPS, "false" ) );
-        IGNORE_BLOB = "true".equalsIgnoreCase( props.getProperty( TRANSFER_IGNORE_BLOBS, "false" ) );
+        CHECK_DEPS = "true".equalsIgnoreCase( HelperManager.getProperties().getProperty( TRANSFER_CHECK_DEPS, "false" ) );
+        USE_DEST_FOR_DEPS = "true".equalsIgnoreCase( HelperManager.getProperties().getProperty( TRANSFER_USE_DEST_FOR_DEPS, "false" ) );
+        IGNORE_BLOB = "true".equalsIgnoreCase( HelperManager.getProperties().getProperty( TRANSFER_IGNORE_BLOBS, "false" ) );
         if( IGNORE_BLOB )
         {
         	System.out.println( "Ignoring BLOBS" );
         }
-        String str = props.getProperty( TRANSFER_MAX_READ_ROWS );
+        String str = HelperManager.getProperties().getProperty( TRANSFER_MAX_READ_ROWS );
         long maxRead = Long.MAX_VALUE;
         if( str != null && !str.isEmpty() )
         {
@@ -236,11 +236,14 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                 String pre = tr.preLoadSetup( TABLES[ i ].saneName );
                 String post = tr.postLoadSetup( TABLES[ i ].saneName );
                 AsyncStatement astm = new AsyncStatement( typesCache, CON_DEST, insert, TABLES[ i ].saneName, pre, post, IGNORE_BLOB );
+                
+                System.out.println( "AsyncStatement waiting threads: " + AsyncStatement.waitingThreads() );
+                
                 threads.add( astm );
                 int rows = 0;
 
                 int row = 0;
-                while( hasData )
+                while( hasData && AsyncStatement.waitingThreads() > 0 )
                 {
                     for( int j = 0; j < typesCache.length; ++j )
                     {

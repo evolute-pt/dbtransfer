@@ -29,6 +29,7 @@ public class PostgreSQLServerHelper extends NullHelper
 		OUTPUT.put( "double", "double precision" );
 		OUTPUT.put( "longvarchar", "text" );
 		OUTPUT.put( "tinyint", "smallint" );
+		OUTPUT.put( "long", "bigint" );
 		
 		RESERVED.put( "order", "order" );
 		RESERVED.put( "user", "user" );
@@ -40,6 +41,7 @@ public class PostgreSQLServerHelper extends NullHelper
 		NORMALIZE.put( "bpchar", "char" );
 		NORMALIZE.put( "float8", "float" );
 		NORMALIZE.put( "bytea", "blob" );
+		NORMALIZE.put( "bigint", "long" );
 		
 		DEFAULTS.put( "'(newsequentialid())'", "" );
 		DEFAULTS.put( "'(' ')'", "' '" );

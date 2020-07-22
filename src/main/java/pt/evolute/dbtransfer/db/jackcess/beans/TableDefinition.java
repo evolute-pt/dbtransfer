@@ -10,8 +10,6 @@ import java.util.Map;
 
 import com.healthmarketscience.jackcess.Column;
 import com.healthmarketscience.jackcess.Index;
-import com.healthmarketscience.jackcess.IndexData;
-import com.healthmarketscience.jackcess.IndexData.ColumnDescriptor;
 import com.healthmarketscience.jackcess.Table;
 
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
@@ -75,7 +73,7 @@ public class TableDefinition
 	private void initColumns()
 			throws SQLException, IOException
 	{
-		List<Column> cols = table.getColumns();
+		List<? extends Column> cols = table.getColumns();
 		for( Column col: cols )
 		{
 			ColumnDefinition myCol = new ColumnDefinition();
@@ -91,13 +89,13 @@ public class TableDefinition
 			columns.add( myCol );
 			columns_map.put( myCol.name.toString(), myCol );
 		}
-		List<Index> indexes = table.getIndexes();
+		List<? extends Index> indexes = table.getIndexes();
 		for( Index idx: indexes )
 		{
 			if( idx.isPrimaryKey() )
 			{
-				List<ColumnDescriptor> idxCols = idx.getColumns();
-				for( ColumnDescriptor idxCol: idxCols )
+				List<? extends Index.Column> idxCols = idx.getColumns();
+				for( Index.Column idxCol: idxCols )
 				{
 					ColumnDefinition col = columns_map.get( idxCol.getName().toLowerCase() );
 					col.isPrimaryKey = true;
@@ -111,8 +109,8 @@ public class TableDefinition
 			}
 			if( idx.isForeignKey() )
 			{
-				List<ColumnDescriptor> idxCols = idx.getColumns();
-				for( ColumnDescriptor idxCol: idxCols )
+				List<? extends Index.Column> idxCols = idx.getColumns();
+				for( Index.Column idxCol: idxCols )
 				{
 					ColumnDefinition col = columns_map.get( idxCol.getName().toLowerCase() );
 					col.foreignKeyName = idxCol.getName().toLowerCase();
@@ -122,7 +120,7 @@ public class TableDefinition
 						col.sqlType = Types.INTEGER;
 						col.sqlTypeName = "integer";
 					}
-					List<IndexData.ColumnDescriptor> list = idx.getReferencedIndex().getColumns();
+					List<? extends Index.Column> list = idx.getReferencedIndex().getColumns();
 					
 					if( list.size() == 1 )
 					{

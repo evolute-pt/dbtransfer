@@ -95,12 +95,13 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			{
 				continue;
 			}
+//			System.out.println( "FK: " + fk.name + " to " + fk.columns.get( 0 ).referencedTable );
 			StringBuilder buff = new StringBuilder("ALTER TABLE ");
 			buff.append( table.saneName );
 			buff.append(" ADD CONSTRAINT ");
-			ColumnDefinition col0 = fk.columns.remove( 0 );
 			buff.append( fk.getOutputName() );
 			buff.append(" FOREIGN KEY ( ");
+			ColumnDefinition col0 = fk.columns.remove( 0 );
 			buff.append( col0.name );
 			for( ColumnDefinition col: fk.columns )
 			{
@@ -119,7 +120,9 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			buff.append(" )");
 			try
 			{
+				CON_DEST.executeQuery( "BEGIN;" );
 				CON_DEST.executeQuery(buff.toString());
+				CON_DEST.executeQuery( "COMMIT;" );
 			}
 			catch(SQLException ex)
 			{

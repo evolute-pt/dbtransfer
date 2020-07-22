@@ -25,6 +25,12 @@ public class CursorResultSet2DArray implements Virtual2DArray
         columns = results.getMetaData().getColumnCount();
         currentRowData = new Object[ columns ];
         validRow = results.next();
+//        results.last();
+//        rows = results.getRow();
+//        if( !results.first() )
+//        {
+//        	System.out.println( "First not supported" );
+//       }
     }
 
     @SuppressWarnings("unchecked")
@@ -88,6 +94,7 @@ public class CursorResultSet2DArray implements Virtual2DArray
     @Override
     public int rowCount()
     {
+    	
         if( rows == -1 )
         {
             throw new RuntimeException( "not supported" );

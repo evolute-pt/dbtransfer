@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -82,9 +83,9 @@ public class ModelProvider extends Connector
 	public List<DBTable> getTables()
 		throws Exception
 	{
-		if( TABLE_CACHE.size() == 0 )
+		if( TABLE_CACHE.isEmpty() )
 		{
-			List<DBTable> tables = new Vector<DBTable>();
+			List<DBTable> tables = new LinkedList<DBTable>();
 			ResultSet rs = metadata.getTables( catalog, schema, null, new String[] { "TABLE" } );
 			while( rs.next() )
 			{
@@ -96,7 +97,7 @@ public class ModelProvider extends Connector
 			}
 			rs.close();
 		}
-		List<DBTable> tables = new Vector<DBTable>();
+		List<DBTable> tables = new LinkedList<DBTable>();
 		tables.addAll( TABLE_CACHE.values() );
 		return tables;
 	}
@@ -289,6 +290,7 @@ public class ModelProvider extends Connector
 		String tableName = ( String )table.get( DBTable.NAME );
 		if( !IMPORTED_KEY_CACHE.containsKey( tableName ) )
 		{
+			System.out.println( "GIKT <" + tableName + ">" );
 			ResultSet rs = metadata.getImportedKeys( catalog, schema, ( String )table.get( DBTable.NAME ) );
 			
 			IMPORTED_KEY_CACHE.put( tableName, readForeignKeys( rs ) );
@@ -305,7 +307,7 @@ public class ModelProvider extends Connector
 		Map<String,DBTable> cacheClone = new HashMap<String,DBTable>();
 		cacheClone.putAll( TABLE_CACHE );
 		int lastSize = -1;
-		while( cacheClone.size() > 0 )
+		while( !cacheClone.isEmpty() )
 		{
 			String keys[] = cacheClone.keySet().toArray( new String[ cacheClone.size() ] );
 			if( lastSize == cacheClone.size() )
@@ -326,7 +328,7 @@ public class ModelProvider extends Connector
 				DBTable table = cacheClone.get( keys[ k ] );
 				List<DBReference> references = table.getImportedForeignKeys();
 				boolean clean = true;
-				if( references.size() > 0 )
+				if( !references.isEmpty() )
 				{
 					for( int r = 0; r < references.size(); r++ )
 					{
@@ -347,6 +349,7 @@ public class ModelProvider extends Connector
 				}
 			}
 		}
+		System.out.println( "Tables ordered: " + ordered );
 		return ordered;
 	}
 	
