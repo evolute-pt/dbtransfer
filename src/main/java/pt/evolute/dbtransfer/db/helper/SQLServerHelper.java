@@ -1,7 +1,6 @@
 package pt.evolute.dbtransfer.db.helper;
 
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,7 +111,7 @@ public class SQLServerHelper extends NullHelper
 	@Override
 	public String normalizedType( String type )
 	{
-		String normalize = NORMALIZE.get( type );
+		String normalize = NORMALIZE.get( type.toLowerCase() );
 		if( normalize == null )
 		{
 			normalize = type;
