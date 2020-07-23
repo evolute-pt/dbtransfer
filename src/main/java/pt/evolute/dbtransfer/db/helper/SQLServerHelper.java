@@ -75,7 +75,7 @@ public class SQLServerHelper extends NullHelper
 	@Override
 	public String outputType( String type, Integer size )
 	{
-		String output = OUTPUT_TYPE.get( type );
+		String output = OUTPUT_TYPE.get( type.toLowerCase() );
 		if( output == null )
 		{
 			output = type;
