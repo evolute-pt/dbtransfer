@@ -82,7 +82,7 @@ public class Analyser implements Constants
 				++j;
 			}
 			buff.append( " ) " );
-			v2.add( "DROP TABLE " + TABLES[ i ] + " CASCADE" );
+			v2.add( DEST_TR.getDropTable( TABLES[ i ].toString() ) );
 			v.add( buff );
 		}
 		
@@ -92,20 +92,20 @@ public class Analyser implements Constants
 		{
 			try
 			{
-				destCon.executeQuery( "BEGIN TRANSACTION;" );
+//				destCon.executeQuery( DEST_TR.getBegin() );
 				destCon.executeQuery( v2.get( i ) );
-				destCon.executeQuery( "COMMIT;" );
+//				destCon.executeQuery( DEST_TR.getCommit() );
 			}
 			catch( Exception ex )
 			{
 				// table didn't exist
 				System.out.println( ex.getMessage() );
-				destCon.executeQuery( "ROLLBACK;" );
+//				destCon.executeQuery( DEST_TR.getRollback() );
 			}
 System.out.println( "T: " + v.get( i ) );
-			destCon.executeQuery( "BEGIN TRANSACTION;" );
+//			destCon.executeQuery( DEST_TR.getBegin() );
 			destCon.executeQuery( v.get( i ).toString() );
-			destCon.executeQuery( "COMMIT;" );
+//			destCon.executeQuery( DEST_TR.getCommit() );
 		}
 	}
 	

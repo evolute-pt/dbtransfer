@@ -99,6 +99,7 @@ public class TableDefinition
 				{
 					ColumnDefinition col = columns_map.get( idxCol.getName().toLowerCase() );
 					col.isPrimaryKey = true;
+					col.isNotNull = true;
 					/* fix double pk to integer */
 					if( col.sqlType == Types.DOUBLE && idxCol.getColumn().getPrecision() == 0 )
 					{

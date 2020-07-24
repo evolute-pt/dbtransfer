@@ -120,9 +120,9 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			buff.append(" )");
 			try
 			{
-				CON_DEST.executeQuery( "BEGIN TRANSACTION;" );
+				CON_DEST.executeQuery( DEST_TR.getBegin() );
 				CON_DEST.executeQuery(buff.toString());
-				CON_DEST.executeQuery( "COMMIT;" );
+				CON_DEST.executeQuery( DEST_TR.getCommit() );
 			}
 			catch(SQLException ex)
 			{
@@ -159,9 +159,9 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 				buff.append(" )");
 				try
 				{
-					CON_DEST.executeQuery( "BEGIN TRANSACTION;" );
+					CON_DEST.executeQuery( DEST_TR.getBegin() );
 					CON_DEST.executeQuery(buff.toString());
-					CON_DEST.executeQuery( "COMMIT;" );
+					CON_DEST.executeQuery( DEST_TR.getCommit() );
 				}
 				catch(SQLException ex)
 				{
@@ -197,9 +197,9 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			buff.append(" )");
 			try
 			{
-				CON_DEST.executeQuery( "BEGIN TRANSACTION;" );
+				CON_DEST.executeQuery( DEST_TR.getBegin() );
 				CON_DEST.executeQuery(buff.toString());
-				CON_DEST.executeQuery( "COMMIT;" );
+				CON_DEST.executeQuery( DEST_TR.getCommit() );
 			}
 			catch(SQLException ex)
 			{

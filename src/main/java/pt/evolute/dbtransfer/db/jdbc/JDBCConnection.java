@@ -34,8 +34,8 @@ import pt.evolute.utils.dbmodel.ModelProvider;
  */
 public class JDBCConnection implements DBConnection
 {
-    public static boolean debug = false;
-    public static boolean debugSQL = false;
+    public static boolean debug = true;
+    public static boolean debugSQL = true;
 
     private final String dbUrl;
     private final String dbUser;
@@ -117,7 +117,7 @@ public class JDBCConnection implements DBConnection
         		System.out.println( "getConnection: " + dbUrl + " " + dbUser );
         	}
             connection = Connector.getConnection( dbUrl, dbUser, dbPasswd );
-            connection.setAutoCommit( false );
+            connection.setAutoCommit( true );
         }
     }
 

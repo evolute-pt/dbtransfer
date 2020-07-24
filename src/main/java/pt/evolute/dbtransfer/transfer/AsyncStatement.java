@@ -119,8 +119,8 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
             }
             int rows = 0;
             
+            CONN.executeQuery( destHelper.getBegin() );
             PreparedStatement pStm = CONN.prepareStatement( INSERT );
-            CONN.executeQuery( "BEGIN TRANSACTION;" );
             // enquanto a thread nao for parada
             // ou tiver dados locais
             // ou ainda houver dados no buffer partilhado
@@ -142,19 +142,19 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
                     		if( pStm.isClosed() || !pStm.getConnection().isValid( 5 ) )
                     		{
                     			pStm = CONN.prepareStatement( INSERT );
-                    			CONN.executeQuery( "BEGIN TRANSACTION;" );
+                    			CONN.executeQuery( destHelper.getBegin() );
                     		}
                     	}
                     	catch( SQLException ex )
                     	{
                     		pStm = CONN.prepareStatement( INSERT );
-                    		CONN.executeQuery( "BEGIN TRANSACTION;" );
+                    		CONN.executeQuery( destHelper.getBegin() );
                     	}
 //                      System.out.print( "-" + id + "." + ( rows / Mover.MAX_BATCH_ROWS ) );
                         
                     	pStm.executeBatch();
-                    	CONN.executeQuery( "COMMIT;" );
-                    	CONN.executeQuery( "BEGIN TRANSACTION;" );
+                    	CONN.executeQuery( destHelper.getCommit() );
+                    	CONN.executeQuery( destHelper.getBegin() );
                     	rowOK = false;
                     }
                 }
@@ -163,7 +163,7 @@ System.out.println( "Async " + id + " created \n" + INSERT + "\nisRunning? " + i
             {
 //                    System.out.print( "|" + id );
                 pStm.executeBatch();
-                CONN.executeQuery( "COMMIT;" );
+                CONN.executeQuery( destHelper.getCommit() );
                 pStm.close();
             }
             System.out.println( "Done writing table: " + id + " (" + rows + " rows written)" );

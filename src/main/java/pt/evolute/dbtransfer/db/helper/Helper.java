@@ -48,4 +48,12 @@ public interface Helper
             throws Exception;
     
     public boolean isTableValid(Name n);        
+    
+    public String getDropTable( String table );
+    
+    public String getBegin();
+    
+    public String getCommit();
+    
+    public String getRollback();
 }

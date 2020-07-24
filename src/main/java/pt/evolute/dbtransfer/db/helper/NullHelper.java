@@ -199,4 +199,24 @@ public class NullHelper implements Helper
     {
         return true;
     }
+
+	@Override
+	public String getDropTable(String table) {
+		return "DROP TABLE " + table;
+	}
+
+	@Override
+	public String getBegin() {
+		return "BEGIN";
+	}
+
+	@Override
+	public String getCommit() {
+		return "COMMIT";
+	}
+
+	@Override
+	public String getRollback() {
+		return "ROLLBAK";
+	}
 }

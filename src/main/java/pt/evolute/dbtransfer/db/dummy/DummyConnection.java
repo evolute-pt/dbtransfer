@@ -1172,6 +1172,30 @@ public class DummyConnection implements DBConnection {
 			@Override
 			public void fixSequences(DBConnection con, String table, String typeName, String column) throws Exception {
 			}
+
+			@Override
+			public String getDropTable(String table) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getBegin() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getCommit() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String getRollback() {
+				// TODO Auto-generated method stub
+				return null;
+			}
 		};
     }
 }

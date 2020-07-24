@@ -25,6 +25,8 @@ public class SQLServerHelper extends NullHelper
 		OUTPUT_TYPE.put( "timestamp", "datetime" );
 		OUTPUT_TYPE.put( "int8", "bigint" );
 		OUTPUT_TYPE.put( "long", "bigint" );
+		OUTPUT_TYPE.put( "double", "float" );
+		OUTPUT_TYPE.put( "longvarchar", "varchar(MAX)" );
 		
 		RESERVED.put( "database", "database" );
 		RESERVED.put( "order", "order" );
@@ -132,13 +134,13 @@ public class SQLServerHelper extends NullHelper
 	@Override
 	public String preLoadSetup( String table )
 	{
-		return "SET IDENTITY_INSERT " + table + " ON;";
+		return ""; // "SET IDENTITY_INSERT " + table + " ON;";
 	}
 	
 	@Override
 	public String postLoadSetup( String table )
 	{
-		return "SET IDENTITY_INSERT " + table + " OFF;";
+		return ""; //"SET IDENTITY_INSERT " + table + " OFF;";
 	}
 	
         @Override
@@ -247,5 +249,20 @@ public class SQLServerHelper extends NullHelper
 			}
 		}
 		return norm;
+	}
+        
+	@Override
+	public String getBegin() {
+		return "BEGIN TRANSACTION";
+	}
+
+	@Override
+	public String getCommit() {
+		return "COMMIT TRANSACTION";
+	}
+
+	@Override
+	public String getRollback() {
+		return "";
 	}
 }

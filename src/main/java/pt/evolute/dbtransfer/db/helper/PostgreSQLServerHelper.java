@@ -302,4 +302,9 @@ public class PostgreSQLServerHelper extends NullHelper
         	super.setPreparedValue( pStm, col, o, type );
         }
     }
+    
+    @Override
+	public String getDropTable(String table) {
+		return "DROP TABLE " + table + " CASCADE";
+	}
 }

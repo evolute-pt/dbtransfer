@@ -56,7 +56,7 @@ public class Config implements Constants{
 		}
 		return t; 
 	}
-
+	
 	public static boolean checkDependencies() {
 		return getValue( TRANSFER_CHECK_DEPS );
 	}
