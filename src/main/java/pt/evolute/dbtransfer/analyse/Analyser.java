@@ -56,6 +56,7 @@ public class Analyser implements Constants
 		{
 			List<ColumnDefinition> list = CON_SRC.getColumnList( TABLES[ i ] );
 			StringBuilder buff = new StringBuilder( "CREATE TABLE " );
+			buff.append( DEST_TR.getCreateTablePrefix() );
 			buff.append( TABLES[ i ].saneName );
 			buff.append( " ( " );
 			int j = 0;

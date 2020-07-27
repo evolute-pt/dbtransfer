@@ -219,4 +219,9 @@ public class NullHelper implements Helper
 	public String getRollback() {
 		return "ROLLBAK";
 	}
+
+	@Override
+	public String getCreateTablePrefix() {
+		return "";
+	}
 }

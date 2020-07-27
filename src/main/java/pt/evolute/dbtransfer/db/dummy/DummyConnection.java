@@ -1196,6 +1196,12 @@ public class DummyConnection implements DBConnection {
 				// TODO Auto-generated method stub
 				return null;
 			}
+
+			@Override
+			public String getCreateTablePrefix() {
+				// TODO Auto-generated method stub
+				return null;
+			}
 		};
     }
 }

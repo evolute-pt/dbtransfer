@@ -56,4 +56,6 @@ public interface Helper
     public String getCommit();
     
     public String getRollback();
+
+	public String getCreateTablePrefix();
 }
