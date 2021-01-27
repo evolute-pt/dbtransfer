@@ -4,12 +4,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import pt.evolute.dbtransfer.Config;
-import pt.evolute.dbtransfer.Constants;
+import pt.evolute.dbtransfer.ConfigurationProperties;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
-import pt.evolute.dbtransfer.db.beans.Name;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
 
@@ -17,11 +17,11 @@ import pt.evolute.dbtransfer.db.helper.HelperManager;
  *
  * @author  lflores
  */
-public class Analyser implements Constants
+public class Analyser implements ConfigurationProperties
 {	
-	private final Name TABLES[];
+	private final TableDefinition TABLES[];
 	private final ConnectionDefinitionBean SRC;
-        private final ConnectionDefinitionBean DST;
+    private final ConnectionDefinitionBean DST;
 	private final DBConnection CON_SRC;
 //	private final DatabaseMetaData DB_META;
 	
@@ -35,13 +35,18 @@ public class Analyser implements Constants
 		throws Exception
 	{
 		SRC = src;
-                DST = dst;
-                
-                boolean ignoreEmpty = Config.ignoreEmpty();
-                
+        DST = dst;
+        if( Config.debug() )
+        {
+        	System.out.println( "Analyser source: " + SRC );
+        	System.out.println( "Analyser destination: " + DST );
+        }
+        
+        boolean ignoreEmpty = Config.ignoreEmpty();
+        
 		CON_SRC = DBConnector.getConnection( SRC.getUrl(), SRC.getUser(), SRC.getPassword(), ignoreEmpty, SRC.getSchema() );
-		List<Name> v = CON_SRC.getTableList();
-		TABLES = v.toArray( new Name[ v.size() ] );
+		List<TableDefinition> v = CON_SRC.getTableList();
+		TABLES = v.toArray( new TableDefinition[ v.size() ] );
 		
 		SRC_TR = HelperManager.getTranslator( SRC.getUrl() );
 		DEST_TR = HelperManager.getTranslator( DST.getUrl() );
@@ -82,7 +87,7 @@ public class Analyser implements Constants
 				}*/
 				++j;
 			}
-			buff.append( " ) " );
+			buff.append( ") " );
 			v2.add( DEST_TR.getDropTable( TABLES[ i ].toString() ) );
 			v.add( buff );
 		}

@@ -19,6 +19,7 @@ import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.beans.PrimaryKeyDefinition;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.beans.UniqueDefinition;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
@@ -49,7 +50,7 @@ public class JDBCConnection implements DBConnection
 
     private final Map<String,List<ColumnDefinition>> MAP_TABLE_COLUMNS = new HashMap<String,List<ColumnDefinition>>();
 
-    private final List<Name> LIST_TABLES = new ArrayList<Name>();
+    private final List<TableDefinition> LIST_TABLES = new ArrayList<TableDefinition>();
     
     private final Helper helper;
 
@@ -121,7 +122,7 @@ public class JDBCConnection implements DBConnection
         }
     }
 
-    public List<Name> getTableList()
+    public List<TableDefinition> getTableList()
                     throws Exception
     {
     	if( LIST_TABLES.isEmpty() )
@@ -131,7 +132,7 @@ public class JDBCConnection implements DBConnection
 	        while( rs.next() )
 	        {
 	            String table = rs.getString( 3 );
-	            Name n = new Name( table );
+	            TableDefinition n = new TableDefinition( table );
 	            if( helper.isTableValid( n ) )
 	            {
 	            	if( "elo_log".equalsIgnoreCase( table ) 
@@ -161,19 +162,19 @@ public class JDBCConnection implements DBConnection
 	    return LIST_TABLES;
     }
 
-    public List<ColumnDefinition> getColumnList( Name table ) throws Exception
+    public List<ColumnDefinition> getColumnList( TableDefinition table ) throws Exception
     {
-        List<ColumnDefinition> list = MAP_TABLE_COLUMNS.get( table.originalName );
+        List<ColumnDefinition> list = MAP_TABLE_COLUMNS.get( table.saneName );
         if( list == null )
         {
             testInitConnection();
             DatabaseMetaData rsmd = connection.getMetaData();
-            ResultSet rs = rsmd.getColumns( catalog, dbSchema, table.originalName, null );
+            ResultSet rs = rsmd.getColumns( catalog, dbSchema, table.saneName, null );
             list = new LinkedList<ColumnDefinition>();
             Map<String,ColumnDefinition> cols = new HashMap<String, ColumnDefinition>();
             if( debug )
             {
-            	System.out.println( "COL FOR TABLE: <" + table.originalName + ">" );
+            	System.out.println( "COL FOR TABLE: <" + table.saneName + ">" );
             }
             while( rs.next() )
             {
@@ -254,7 +255,7 @@ public class JDBCConnection implements DBConnection
         return ret;
     }
 
-    public PrimaryKeyDefinition getPrimaryKey( Name table) throws Exception
+    public PrimaryKeyDefinition getPrimaryKey( TableDefinition table) throws Exception
     {
         PrimaryKeyDefinition pk = new PrimaryKeyDefinition();
         pk.name = table + "_pk";
@@ -285,7 +286,7 @@ public class JDBCConnection implements DBConnection
         return pk;
     }
 
-    public List<ForeignKeyDefinition> getForeignKeyList(Name table) throws Exception
+    public List<ForeignKeyDefinition> getForeignKeyList(TableDefinition table) throws Exception
     {
         DatabaseMetaData rsmd = connection.getMetaData();
         System.out.println( "getting FKs: " + connection.getCatalog() + "/" + dbSchema + "/" + table.originalName + "/" );
@@ -303,8 +304,9 @@ public class JDBCConnection implements DBConnection
                     fks.put( fkName, fk );
             }
             ColumnDefinition col = new ColumnDefinition();
-            col.referencedTable = new Name( rs.getString( 3 ) );
-            col.referencedColumn = new Name( rs.getString( 4 ) );
+            col.referencedTable = new TableDefinition( rs.getString( 3 ) );
+            col.referencedColumn = new ColumnDefinition();
+            col.referencedColumn.name = new Name( rs.getString( 4 ) );
             col.name = new Name( rs.getString( 8 ) );
             ResultSet rsC = rsmd.getColumns( catalog, dbSchema, helper.outputName( table.originalName ), col.name.originalName );
             if( rsC.next() )
@@ -334,7 +336,7 @@ public class JDBCConnection implements DBConnection
         return list;
     }
 
-    public Virtual2DArray getFullTable( Name table ) throws Exception
+    public Virtual2DArray getFullTable( TableDefinition table ) throws Exception
     {
             List<ColumnDefinition> cols = getColumnList( table );
             if( cols.isEmpty() )
@@ -365,7 +367,7 @@ public class JDBCConnection implements DBConnection
     }
 
     @Override
-    public List<UniqueDefinition> getUniqueList( Name table )
+    public List<UniqueDefinition> getUniqueList( TableDefinition table )
             throws Exception
     {
         DatabaseMetaData rsmd = connection.getMetaData();
@@ -392,7 +394,7 @@ public class JDBCConnection implements DBConnection
         return list;
     }
 
-    private boolean columnExists( Name table, String column )
+    private boolean columnExists( TableDefinition table, String column )
     	throws Exception
     {
     	List<ColumnDefinition> list = getColumnList( table );
@@ -409,7 +411,7 @@ public class JDBCConnection implements DBConnection
     }
     
     @Override
-    public int getRowCount( Name table) throws Exception 
+    public int getRowCount( TableDefinition table) throws Exception 
     {
         int count = ( ( Number )executeQuery( "SELECT COUNT(*) FROM " + helper.outputName( table.originalName ) ).get( 0, 0 ) ).intValue();
         if( debug )

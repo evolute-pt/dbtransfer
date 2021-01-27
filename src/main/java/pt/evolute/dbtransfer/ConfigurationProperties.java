@@ -10,7 +10,7 @@ package pt.evolute.dbtransfer;
  *
  * @author  lflores
  */
-public interface Constants
+public interface ConfigurationProperties
 {
     public final static String URL_DB_SOURCE = "URL_DB_SOURCE";
     public final static String USER_DB_SOURCE = "USER_DB_SOURCE";
@@ -23,10 +23,12 @@ public interface Constants
     public final static String USER_DB_DESTINATION = "USER_DB_DESTINATION";
     public final static String PASSWORD_DB_DESTINATION = "PASSWORD_DB_DESTINATION";
     public final static String SCHEMA_DB_DESTINATION = "SCHEMA_DB_DESTINATION";
-
-    public final static String DESTINATION_PROPS[] = { URL_DB_DESTINATION, USER_DB_DESTINATION, PASSWORD_DB_DESTINATION, SCHEMA_DB_DESTINATION };
+    public final static String DESTINATION_TABLE_PREFIX = "DESTINATION_TABLE_PREFIX";
+    
+    public final static String DESTINATION_PROPS[] = { URL_DB_DESTINATION, USER_DB_DESTINATION, PASSWORD_DB_DESTINATION, SCHEMA_DB_DESTINATION, DESTINATION_TABLE_PREFIX };
 
     public final static String ANALYSE = "ANALYSE";
+    public final static String ANALYSE_DELETE_IF_EXISTS = "ANALYSE_DELETE_IF_EXISTS";
 
     public final static String ONLY_NOT_EMPTY = "ONLY_NOT_EMPTY";
 
@@ -42,6 +44,8 @@ public interface Constants
 
     public final static String DIFF = "DIFF";
     public final static String DIFF_COMMENT = "DIFF.COMMENT";
+    public final static String DIFF_USE_MD5 = "DIFF.USE_MD5";
+    public final static String DIFF_IGNORE_DESTINATION_TABLE_COUNT = "DIFF.IGNORE_DESTINATION_TABLE_COUNT";
 
     public final static String DEBUG = "DEBUG";
 }

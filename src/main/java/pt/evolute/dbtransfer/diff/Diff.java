@@ -1,20 +1,21 @@
 package pt.evolute.dbtransfer.diff;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import pt.evolute.dbtransfer.Config;
-import pt.evolute.dbtransfer.Constants;
+import pt.evolute.dbtransfer.ConfigurationProperties;
 import pt.evolute.dbtransfer.analyse.Analyser;
 import pt.evolute.dbtransfer.constrain.Constrainer;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
-import pt.evolute.dbtransfer.db.beans.Name;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
 import pt.evolute.dbtransfer.transfer.Mover;
 import pt.evolute.utils.arrays.Virtual2DArray;
@@ -22,6 +23,7 @@ import pt.evolute.utils.arrays.exception.EndOfArrayException;
 import pt.evolute.utils.db.Connector;
 import pt.evolute.utils.dbmodel.DBColumn;
 import pt.evolute.utils.dbmodel.DBTable;
+import pt.evolute.utils.error.ErrorLogger;
 import pt.evolute.utils.sql.Assignment;
 import pt.evolute.utils.sql.Expression;
 import pt.evolute.utils.sql.Field;
@@ -30,7 +32,7 @@ import pt.evolute.utils.sql.Select2;
 import pt.evolute.utils.sql.Update;
 import pt.evolute.utils.sql.backend.BackendProvider;
 
-public class Diff extends Connector implements Constants
+public class Diff extends Connector implements ConfigurationProperties
 {
 	private static final String TABLE_DBTRANSFER_UPDATE = "dbtransfer_update";
 	
@@ -42,7 +44,7 @@ public class Diff extends Connector implements Constants
 
 	public static final int MAX_BATCH_ROWS = 4096;
 	
-	private final Name TABLES[];
+	private final TableDefinition TABLES[];
 	private final ConnectionDefinitionBean SRC;
 	private final ConnectionDefinitionBean DST;
 	private final DBConnection CON_SRC;
@@ -54,8 +56,8 @@ public class Diff extends Connector implements Constants
 		throws Exception
 	{
 		SRC = src;
-                DST = dst;
-		boolean ignoreEmpty = Config.ignoreEmpty();
+        DST = dst;
+		boolean ignoreEmpty = Config.ignoreEmpty();	
 		
 		CON_SRC = DBConnector.getConnection( SRC, ignoreEmpty );
 		
@@ -63,10 +65,10 @@ public class Diff extends Connector implements Constants
 		
 		CON_DEST = DBConnector.getConnection( DST, false );
 		
-	System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
+		System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
 	
-		List<Name> v = CON_SRC.getTableList();
-		TABLES = v.toArray( new Name[ v.size() ] );
+		List<TableDefinition> v = CON_SRC.getTableList();
+		TABLES = v.toArray( new TableDefinition[ v.size() ] );
 	}
 	
 	public void diffDb()
@@ -78,12 +80,27 @@ public class Diff extends Connector implements Constants
 	
 	private void diff()
 		throws Exception
-	{	
-		for( DBTable table: CON_SRC.getSortedTables() )
+	{
+		Map<String,TableDefinition> map = new HashMap<String,TableDefinition>();
+		for( TableDefinition t: TABLES )
 		{
-			if( !TABLE_DBTRANSFER_UPDATE.equals( table.toString() ) )
+			map.put( t.saneName, t );
+		}
+		for( DBTable table: CON_DEST.getSortedTables() )
+		{
+			if( map.containsKey( table.toString() ) )
 			{
-				diffTable( table );
+				if( !TABLE_DBTRANSFER_UPDATE.equals( table.toString() ) )
+				{
+					try
+					{
+						diffTable( table );
+					}
+					catch( Exception ex )
+					{
+						ErrorLogger.logException( ex );
+					}
+				}
 			}
 		}
 	}
@@ -104,18 +121,14 @@ public class Diff extends Connector implements Constants
 		int d = 0;
 		for( Object pk: src.keySet() )
 		{
-//			if( "cft".equals( table.toString() ) )
-//			{
-//				System.out.println( "Pk: " + pk );
-//			}
 			if( dest.containsKey( pk ) )
 			{
-//				if( "cft".equals( table.toString() ) )
-//				{
-//					System.out.println( "IN DEST pk: " + pk + " srcNull: " + (src == null) + " destNull: " + ( dest == null ) + " dest.get: " + dest.get( pk ) );
-//				}
 				if( !src.get( pk ).rowMd5.equals( dest.get( pk ).rowMd5 ) )
 				{
+					if( Config.debug() )
+					{
+						System.out.println( "Different rows:\n<" + src.get( pk ).rowMd5 + ">\n<" + dest.get( pk ).rowMd5 + ">" );
+					}
 					updateRow( table, pk );
 					++u;
 				}
@@ -193,7 +206,7 @@ public class Diff extends Connector implements Constants
 			{
 				try
 				{
-					pkValue = new Integer( pkValue.toString() );
+					pkValue = Integer.parseInt( pkValue.toString() );
 				}
 				catch( NumberFormatException ex )
 				{
@@ -284,7 +297,7 @@ public class Diff extends Connector implements Constants
 			}
 		}
 		assigns.add( new Assignment( COLUMN_MODIFIED_ACTION, "i" ) );
-		assigns.add( new Assignment( COLUMN_MODIFIED_COMMENT, "comment" ) );
+		assigns.add( new Assignment( COLUMN_MODIFIED_COMMENT, comment ) );
 		assigns.add( new Assignment( COLUMN_MODIFIED_STAMP, new Timestamp( System.currentTimeMillis() ) ) );
 		
 		Insert insert = new Insert( table.toString(), assigns.toArray( new Assignment[ assigns.size() ] ) );
@@ -297,7 +310,7 @@ public class Diff extends Connector implements Constants
 	{
 		Update update = new Update( table.toString(), new Assignment[]{
 					new Assignment( COLUMN_MODIFIED_ACTION, "d" ),
-					new Assignment( COLUMN_MODIFIED_COMMENT, "comment" ),
+					new Assignment( COLUMN_MODIFIED_COMMENT, comment ),
 					new Assignment( COLUMN_MODIFIED_STAMP, new Timestamp( System.currentTimeMillis() ) )
 				} , getPkExpression( table, pk ).and( new Field( COLUMN_MODIFIED_ACTION ).isDifferent( "d" ) ) );
 		update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
@@ -307,14 +320,24 @@ public class Diff extends Connector implements Constants
 	private static String getKeyCollapsedField( DBTable table )
 		throws Exception
 	{
-		System.out.println( "T: " + table.toString() );
+		if( Config.debug() )
+		{
+			System.out.println( "T: " + table.toString() );
+		}
 		List<DBColumn> pks = table.getPrimaryKey();
 		StringBuilder sbPk = new StringBuilder( "'*'||" );
-		sbPk.append( pks.get( 0 ).get( DBColumn.NAME ) );
-		for( int i = 1; i < pks.size(); ++i )
+		if( !pks.isEmpty() )
 		{
-			sbPk.append( "||'*'||" );
-			sbPk.append( pks.get( i ).get( DBColumn.NAME ) );
+			sbPk.append( pks.get( 0 ).get( DBColumn.NAME ) );
+			for( int i = 1; i < pks.size(); ++i )
+			{
+				sbPk.append( "||'*'||" );
+				sbPk.append( pks.get( i ).get( DBColumn.NAME ) );
+			}
+		}
+		else
+		{
+			throw new Exception( "Diff needs Primary Key on table - " + table.toString() );
 		}
 		return sbPk.toString();
 	}
@@ -323,24 +346,38 @@ public class Diff extends Connector implements Constants
 		throws Exception
 	{
 		List<DBColumn> cols = table.getColumnsNoPK();
-		StringBuilder sb = new StringBuilder( "'*'||coalesce(''||" );
+		StringBuilder sb = new StringBuilder( "'*/'||COALESCE(" );
 		sb.append( cols.get( 0 ).get( DBColumn.NAME ) );
-		sb.append( ",'NULL')" );
+		sb.append( ",'-/-')" );
 		for( int i = 1; i < cols.size(); ++i )
 		{
 			if( !COLUMN_MODIFIED_ACTION.equals( cols.get( i ).get( DBColumn.NAME ) )
 					&& !COLUMN_MODIFIED_STAMP.equals( cols.get( i ).get( DBColumn.NAME ) )
 					&& !COLUMN_MODIFIED_COMMENT.equals( cols.get( i ).get( DBColumn.NAME ) ) )
 			{
-				sb.append( "||'*'||coalesce(''||" );
-				sb.append( cols.get( i ).get( DBColumn.NAME ) );
-				sb.append( ",'NULL')" );
+				sb.append( "||'*/'||COALESCE(" );
+				if( cols.get( i ).getType().equals( Types.TIMESTAMP ) )
+				{
+					sb.append( "TO_CHAR("+cols.get( i ).get( DBColumn.NAME )+",'YYYY/MM/DD HH24:MI:SS')" );
+				}
+				else
+				{
+					sb.append( cols.get( i ).get( DBColumn.NAME ) );
+				}
+				sb.append( ",'-/-')" );
 			}
 		}
 		String pkField = getKeyCollapsedField( table );
 		String fields[] = new String[ getAction? 3: 2 ];
 		fields[ 0 ] = pkField;
-		fields[ 1 ] = "md5(" + sb.toString() + ")";
+		if( Boolean.TRUE.toString().equals( Config.getDiffUseMD5() ) )
+		{
+			fields[ 1 ] = "md5(" + sb.toString() + ")";
+		}
+		else
+		{
+			fields[ 1 ] = sb.toString();
+		}
 		if( getAction )
 		{
 			fields[ 2 ] = COLUMN_MODIFIED_ACTION;
@@ -383,7 +420,7 @@ public class Diff extends Connector implements Constants
 	private void checkDestinationDb()
 		throws Exception
 	{
-		List<Name> v = CON_DEST.getTableList();
+		List<TableDefinition> v = CON_DEST.getTableList();
 		if( v.isEmpty() && TABLES.length > 0 )
 		{
 			Analyser analyser = new Analyser( SRC, DST );
@@ -409,8 +446,8 @@ public class Diff extends Connector implements Constants
 	private void checkDiffColumns()
 		throws Exception
 	{
-		List<Name> tableList = CON_DEST.getTableList();
-		for( Name table: tableList )
+		List<TableDefinition> tableList = CON_SRC.getTableList();
+		for( TableDefinition table: tableList )
 		{
 			System.out.println( "Testing table: <" + table.originalName + ">" );
 			List<ColumnDefinition> cols = CON_DEST.getColumnList( table );
@@ -420,15 +457,15 @@ public class Diff extends Connector implements Constants
 			for( ColumnDefinition col: cols )
 			{
 				System.out.println( "Testing col: <" + col.name + ">" );
-				if( !modifiedAction && COLUMN_MODIFIED_ACTION.equals( col.name.toString() ) )
+				if( !modifiedAction && COLUMN_MODIFIED_ACTION.equals( col.name.saneName ) )
 				{
 					modifiedAction = true;
 				}
-				if( !modifiedStamp && COLUMN_MODIFIED_STAMP.equals( col.name.toString() ) )
+				if( !modifiedStamp && COLUMN_MODIFIED_STAMP.equals( col.name.saneName ) )
 				{
 					modifiedStamp = true;
 				}
-				if( !modifiedComment && COLUMN_MODIFIED_COMMENT.equals( col.name.toString() ) )
+				if( !modifiedComment && COLUMN_MODIFIED_COMMENT.equals( col.name.saneName ) )
 				{
 					modifiedComment = true;
 				}
@@ -437,7 +474,10 @@ public class Diff extends Connector implements Constants
 					break;
 				}
 			}
-			System.out.println( "MA " + modifiedAction + " MS " + modifiedStamp + " MC " + modifiedComment );
+			if( Config.debug() )
+			{
+				System.out.println( "MA " + modifiedAction + " MS " + modifiedStamp + " MC " + modifiedComment );
+			}
 			if( !modifiedAction )
 			{
 				String sql1 = "ALTER TABLE " + table + " ADD COLUMN " 

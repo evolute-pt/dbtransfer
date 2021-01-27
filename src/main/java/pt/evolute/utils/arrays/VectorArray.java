@@ -131,7 +131,7 @@ public class VectorArray
 		List<Integer> v = new ArrayList<Integer>( a.length );
 		for( int i = 0; i < a.length; i++ )
 		{
-			v.add( new Integer( a[i] ) );
+			v.add( a[i] );
 		}
 		
 		return v;

@@ -24,6 +24,13 @@
             <artifactId>jackcess</artifactId>
             <version>3.0.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/net.sf.ucanaccess/ucanaccess -->
+		<dependency>
+		    <groupId>net.sf.ucanaccess</groupId>
+		    <artifactId>ucanaccess</artifactId>
+		    <version>5.0.1</version>
+		    <scope>runtime</scope>
+		</dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>

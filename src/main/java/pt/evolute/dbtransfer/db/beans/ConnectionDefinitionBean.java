@@ -6,6 +6,7 @@
 
 package pt.evolute.dbtransfer.db.beans;
 
+import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -47,11 +48,16 @@ public class ConnectionDefinitionBean
         return schema;
     }
     
+    public String toString()
+    {
+    	return "URL: " + url + " user: " + user + " schema: " + schema;
+    }
+    
     public static ConnectionDefinitionBean loadBean( Properties props, String pro[] )
     {
-        if( pro == null || pro.length != 4 )
+        if( pro == null || ( pro.length != 4 && pro.length != 5 ) )
         {
-            throw new RuntimeException( "pro[] must be not null and have 4 elements" );
+            throw new RuntimeException( "pro[] must be not null and have 4 or 5 elements + " + Arrays.asList( pro ) );
         }
         return new ConnectionDefinitionBean( props.getProperty( pro[ 0 ] ), 
                 props.getProperty( pro[ 1 ] ), props.getProperty( pro[ 2 ] ), 

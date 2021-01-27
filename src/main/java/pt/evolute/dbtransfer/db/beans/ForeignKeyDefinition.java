@@ -39,7 +39,7 @@ public class ForeignKeyDefinition
 				outputName = table.saneName + "_";
 				for( ColumnDefinition col: columns )
 				{
-					outputName += col.name + "_" + col.referencedTable + "_" + col.referencedColumn + "_";
+					outputName += col.name.saneName + "_" + col.referencedTable.saneName + "_" + col.referencedColumn.name.saneName + "_";
 				}
 				outputName += "fk";
 			}

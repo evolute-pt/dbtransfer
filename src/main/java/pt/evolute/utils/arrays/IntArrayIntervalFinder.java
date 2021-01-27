@@ -58,7 +58,7 @@ public class IntArrayIntervalFinder
 			{
 				for( int i = 0; i < count; i++ )
 				{
-					isolated.add( new Integer( last.intValue() + i ) );
+					isolated.add( last.intValue() + i );
 				}
 				count = 1;
 				last = array[ n ];
@@ -78,7 +78,7 @@ public class IntArrayIntervalFinder
 		{
 			for( int i = 0; i < count; i++ )
 			{
-				isolated.add( new Integer( last.intValue() + i ) );
+				isolated.add( last.intValue() + i );
 			}
 		}
 		else

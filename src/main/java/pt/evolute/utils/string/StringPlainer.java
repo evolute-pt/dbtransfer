@@ -22,7 +22,7 @@ public class StringPlainer
 				}
 				else if( preserveNewLine && s.charAt( i ) == '\n' )
 				{
-					sb.append( new Character( s.charAt( i ) ) );
+					sb.append( s.charAt( i ) );
 				}
 			}
 			
@@ -45,11 +45,11 @@ public class StringPlainer
 	{
 		if( c == '\'' ) // apostrofe
 		{
-			return new Character( ' ' );
+			return ' ';
 		}
 		if( c >= '\u0021' && c <= '\u007e' )
 		{
-			return new Character( c );
+			return c;
 		}
 		if( c >= '\u0300' && c <= '\u0360' )
 		{
@@ -193,6 +193,6 @@ public class StringPlainer
 			}
 		}
 		
-		return new Character( cc );
+		return cc;
 	}
 }

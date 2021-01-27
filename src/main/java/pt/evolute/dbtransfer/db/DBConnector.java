@@ -33,6 +33,10 @@ public class DBConnector
 		{
 			con = new DummyConnection( url, usr, pass, onlyNotEmpty );
 		}
+		if( con == null )
+		{
+			System.out.println( "Couldn't get connection for URL: " + url );
+		}
 		return con;
 	}
 }

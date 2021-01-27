@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import pt.evolute.dbtransfer.Config;
 import pt.evolute.utils.object.DefaultLightPropertyObject;
 import pt.evolute.utils.tables.ColumnizedObject;
 
@@ -39,16 +40,6 @@ public class DBTable extends DefaultLightPropertyObject
 		if( importedReferences == null )
 		{
 			importedReferences = provider.getImportedKeysForTable( this );
-/*			if( importedReferences.size() > 0 )
-			{
-				System.out.println( "IMPORTED FOREIGN KEY FOR: " + getField( NAME ) );
-				for( DBReference ref: importedReferences )
-				{
-					System.out.println( "Ref: " + ref.getField( DBReference.NAME ) + " SRC: " 
-					+ ref.getField( DBReference.SRC_TABLE ) + "." + ref.getField( DBReference.SRC_COLUMN ) 
-					+ " DST: " + ref.getField( DBReference.DEST_TABLE ) );
-				}
-			}*/
 		}
 		return importedReferences;
 	}
@@ -59,16 +50,6 @@ public class DBTable extends DefaultLightPropertyObject
 		if( exportedReferences == null )
 		{
 			exportedReferences = provider.getExportedKeysForTable( this );
-/*			if( exportedReferences.size() > 0 )
-			{
-				System.out.println( "EXPORTED FOREIGN KEY FOR: " + getField( NAME ) );
-				for( DBReference ref: exportedReferences )
-				{
-					System.out.println( "Ref: " + ref.getField( DBReference.NAME ) + " SRC: " 
-					+ ref.getField( DBReference.SRC_TABLE ) + "." + ref.getField( DBReference.SRC_COLUMN ) 
-					+ " DST: " + ref.getField( DBReference.DEST_TABLE ) );
-				}
-			}*/
 		}
 		return exportedReferences;
 	}
@@ -168,7 +149,12 @@ public class DBTable extends DefaultLightPropertyObject
 	@Override
 	public String toString()
 	{
-		return ( String ) get( NAME );// + " - " + hashCode();
+		return ( String ) get( NAME );
+	}
+	
+	public String getDestinationName()
+	{
+		return Config.getDestinationTablePrefix() + toString();
 	}
 }
 

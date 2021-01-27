@@ -112,7 +112,7 @@ public class Connector
 			}*/
 		try
 		{
-			name = "n" + new Integer( name );
+			name = "n" + Integer.parseInt( name );
 		}
 		catch( NumberFormatException ex )
 		{

@@ -67,16 +67,19 @@ public class Operand
 		iValue = value;
 	}
 	
+	@SuppressWarnings("deprecation")
 	public Operand( int value )
 	{
 		this( new Integer( value ) );
 	}
 	
+	@SuppressWarnings("deprecation")
 	public Operand( float value )
 	{
 		this( new Float( value ) );
 	}
 	
+	@SuppressWarnings("deprecation")
 	public Operand( double value )
 	{
 		this( new Double( value ) );
@@ -87,6 +90,7 @@ public class Operand
 		this( "" + value );
 	}
 	
+	@SuppressWarnings("deprecation")
 	public Operand( boolean value )
 	{
 		this( new Boolean( value ) );

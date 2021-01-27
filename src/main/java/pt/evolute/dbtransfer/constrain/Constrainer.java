@@ -5,27 +5,27 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Properties;
 
-import pt.evolute.utils.db.Connector;
-import pt.evolute.dbtransfer.Constants;
+import pt.evolute.dbtransfer.ConfigurationProperties;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
-import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.beans.PrimaryKeyDefinition;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.beans.UniqueDefinition;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
+import pt.evolute.utils.db.Connector;
 /**
  *
  * @author  lflores
  */
-public class Constrainer  extends Connector implements Constants
+public class Constrainer  extends Connector implements ConfigurationProperties
 {
 	public static final String CONSTRAIN_KEEP_NAMES = "CONSTRAIN.KEEP_NAMES";
 	
-	private final Name TABLES[];
+	private final TableDefinition TABLES[];
 	private final ConnectionDefinitionBean SRC;
         private final ConnectionDefinitionBean DST;
 	private final DBConnection CON_SRC;
@@ -55,15 +55,15 @@ public class Constrainer  extends Connector implements Constants
 		SRC_TR = HelperManager.getTranslator( SRC.getUrl() );
 		DEST_TR = HelperManager.getTranslator( props.getProperty( URL_DB_DESTINATION ) );
 		
-		List<Name> v = CON_SRC.getTableList();
-		TABLES = v.toArray( new Name[ v.size() ] );
+		List<TableDefinition> v = CON_SRC.getTableList();
+		TABLES = v.toArray( new TableDefinition[ v.size() ] );
 	}
 	
 	public void constrainDB()
 		throws Exception
 	{
          //   boolean after = false;
-		for( Name table: TABLES )
+		for( TableDefinition table: TABLES )
 		{
 			List<ColumnDefinition> list = CON_SRC.getColumnList( table );
 			for( ColumnDefinition col: list )
@@ -73,18 +73,18 @@ public class Constrainer  extends Connector implements Constants
 			}
 			addPrimaryKey( table );	
 		}
-		for( Name table: TABLES )
+		for( TableDefinition table: TABLES )
 		{
 			addUniques( table );
 		}
 		// separate for to run AFTER all primary keys
-		for( Name table: TABLES )
+		for( TableDefinition table: TABLES )
 		{
 			addForeignKeys( table );
 		}
 	}
 
-	private void addForeignKeys( Name table ) throws Exception
+	private void addForeignKeys( TableDefinition table ) throws Exception
 	{
 		// FOREIGN KEYS
 		List<ForeignKeyDefinition> imported = CON_SRC.getForeignKeyList( table );
@@ -102,20 +102,20 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			buff.append( fk.getOutputName() );
 			buff.append(" FOREIGN KEY ( ");
 			ColumnDefinition col0 = fk.columns.remove( 0 );
-			buff.append( col0.name );
+			buff.append( col0.name.saneName );
 			for( ColumnDefinition col: fk.columns )
 			{
 				buff.append( ", " );
-				buff.append(col.name);
+				buff.append(col.name.saneName);
 			}
 			buff.append(" ) REFERENCES ");
-			buff.append(col0.referencedTable);
+			buff.append(col0.referencedTable.saneName);
 			buff.append("( ");
-			buff.append(col0.referencedColumn);
+			buff.append(col0.referencedColumn.name.saneName);
 			for( ColumnDefinition col: fk.columns )
 			{
 				buff.append( ", " );
-				buff.append( col.referencedColumn );
+				buff.append( col.referencedColumn.name.saneName );
 			}
 			buff.append(" )");
 			try
@@ -137,7 +137,7 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 		}
 	}
 
-	private void addUniques( Name table ) throws Exception
+	private void addUniques( TableDefinition table ) throws Exception
 	{
 		List<UniqueDefinition> uniqs = CON_SRC.getUniqueList( table );
 		for(UniqueDefinition uniq : uniqs)
@@ -178,7 +178,7 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 		}
 	}
 	
-	private void addPrimaryKey( Name table ) throws Exception
+	private void addPrimaryKey( TableDefinition table ) throws Exception
 	{
 		// PRIMARY KEY
 		PrimaryKeyDefinition key = CON_SRC.getPrimaryKey( table );
@@ -187,12 +187,12 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 			StringBuilder buff = new StringBuilder("ALTER TABLE ");
 			buff.append( table.saneName );
 			buff.append(" ADD PRIMARY KEY ( ");
-			buff.append(key.columns.remove(0).name);
+			buff.append(key.columns.remove(0).name.saneName);
 			//		buff.append( " )" );
 			for(ColumnDefinition col : key.columns)
 			{
 				buff.append(", ");
-				buff.append(col.name);
+				buff.append(col.name.saneName);
 			}
 			buff.append(" )");
 			try
@@ -212,7 +212,7 @@ System.out.println( "table: " + table.saneName + " has " + imported.size() + " p
 		}
 	}
 
-	private void constrainColumn(ColumnDefinition col, Name table ) throws Exception
+	private void constrainColumn(ColumnDefinition col, TableDefinition table ) throws Exception
 	{
 		// CORRECT SERIAL
 		String typeName = col.sqlTypeName;

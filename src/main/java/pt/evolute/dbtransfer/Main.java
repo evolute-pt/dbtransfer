@@ -26,8 +26,8 @@ public class Main
 		System.out.println( "BEGIN: " + new Date() );
 		long start = System.currentTimeMillis();
 		
-                ConnectionDefinitionBean srcBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), Constants.SOURCE_PROPS );
-                ConnectionDefinitionBean dstBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), Constants.DESTINATION_PROPS );
+                ConnectionDefinitionBean srcBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), ConfigurationProperties.SOURCE_PROPS );
+                ConnectionDefinitionBean dstBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), ConfigurationProperties.DESTINATION_PROPS );
                 
                 JDBCConnection.debug = Config.debug();
 		if( Config.analyse() )

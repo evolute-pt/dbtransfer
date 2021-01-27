@@ -12,16 +12,15 @@ import java.util.Set;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
 import com.healthmarketscience.jackcess.Index;
-import com.healthmarketscience.jackcess.Table;
 
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
-import pt.evolute.dbtransfer.db.beans.Name;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.beans.PrimaryKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.UniqueDefinition;
 import pt.evolute.dbtransfer.db.helper.Helper;
-import pt.evolute.dbtransfer.db.jackcess.beans.TableDefinition;
+import pt.evolute.dbtransfer.db.jackcess.beans.AccessTableDefinition;
 import pt.evolute.utils.arrays.Virtual2DArray;
 import pt.evolute.utils.dbmodel.DBTable;
 
@@ -33,8 +32,8 @@ public class JackcessConnection implements DBConnection {
 
     private final Database db;
 
-    private final List<Name> TABLES_LIST = new LinkedList<Name>();
-    private final Map<Name, TableDefinition> TABLES_MAP = new HashMap<Name, TableDefinition>();
+    private final List<TableDefinition> TABLES_LIST = new LinkedList<TableDefinition>();
+    private final Map<TableDefinition, AccessTableDefinition> TABLES_MAP = new HashMap<TableDefinition, AccessTableDefinition>();
     private final boolean ignoreEmpty;
 
     public JackcessConnection(String url, String user, String pass, boolean onlyNotEmpty)
@@ -43,13 +42,13 @@ public class JackcessConnection implements DBConnection {
         ignoreEmpty = onlyNotEmpty;
     }
 
-    public List<Name> getTableList()
+    public List<TableDefinition> getTableList()
             throws Exception {
         if (TABLES_LIST.isEmpty()) {
             Set<String> set = db.getTableNames();
             System.out.println("Database has " + set.size() + " tables");
             for (String str : set) {
-                Name n = new Name(str);
+            	TableDefinition n = new TableDefinition(str);
                 if (ignoreEmpty && getRowCount(n) == 0) {
                     continue;
                 }
@@ -59,21 +58,20 @@ public class JackcessConnection implements DBConnection {
         return TABLES_LIST;
     }
 
-    public TableDefinition getTableDefinition(Name table)
+    public AccessTableDefinition getTableDefinition(TableDefinition table)
             throws IOException {
-//		table = table.toLowerCase();
-        TableDefinition t = TABLES_MAP.get(table);
+        AccessTableDefinition t = TABLES_MAP.get(table);
         if (t == null) {
-            Table tb = db.getTable(table.originalName);
+        	com.healthmarketscience.jackcess.Table tb = db.getTable(table.originalName);
             if (tb != null) {
-                t = new TableDefinition( /*this,*/tb);
+                t = new AccessTableDefinition( /*this,*/tb);
                 TABLES_MAP.put(table, t);
             }
         }
         return t;
     }
 
-    public List<ColumnDefinition> getColumnList(Name table) throws Exception {
+    public List<ColumnDefinition> getColumnList(TableDefinition table) throws Exception {
         return getTableDefinition(table).getColumns();
     }
 
@@ -81,7 +79,7 @@ public class JackcessConnection implements DBConnection {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public PrimaryKeyDefinition getPrimaryKey(Name table) throws Exception {
+    public PrimaryKeyDefinition getPrimaryKey(TableDefinition table) throws Exception {
         List<ColumnDefinition> cols = getTableDefinition(table).getPrimaryKeys();
         PrimaryKeyDefinition pk = new PrimaryKeyDefinition();
         pk.name = table + "_" + "pk";
@@ -89,11 +87,11 @@ public class JackcessConnection implements DBConnection {
         return pk;
     }
 
-    public List<ForeignKeyDefinition> getForeignKeyList(Name table) throws Exception {
+    public List<ForeignKeyDefinition> getForeignKeyList(TableDefinition table) throws Exception {
         return getTableDefinition(table).getForeignKeys();
     }
 
-    public Virtual2DArray getFullTable(Name table) throws Exception {
+    public Virtual2DArray getFullTable(TableDefinition table) throws Exception {
         return new Jackcess2DArray(db.getTable(table.originalName));
     }
 
@@ -107,7 +105,7 @@ public class JackcessConnection implements DBConnection {
     }
 
     @Override
-    public List<UniqueDefinition> getUniqueList(Name table)
+    public List<UniqueDefinition> getUniqueList(TableDefinition table)
             throws Exception {
 //		table = table.toLowerCase();
         List<UniqueDefinition> list = new LinkedList<UniqueDefinition>();
@@ -123,7 +121,7 @@ public class JackcessConnection implements DBConnection {
     }
 
     @Override
-    public int getRowCount(Name table) throws Exception {
+    public int getRowCount(TableDefinition table) throws Exception {
         return db.getTable(table.originalName).getRowCount();
     }
 

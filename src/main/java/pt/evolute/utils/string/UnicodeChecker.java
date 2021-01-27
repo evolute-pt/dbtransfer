@@ -27,6 +27,7 @@ public class UnicodeChecker
 	
 	private static boolean parsePlica = false;
 	private static boolean useDoubleSlash = false;
+	private static boolean useEscapeOnParse = false;
 	
 	static
 	{
@@ -164,6 +165,11 @@ public class UnicodeChecker
 		UNICODE_SPECIALS.put( "\\\\u2044", "&#8260;" );
 	}
 	
+	public static void setEscapeOnParse( boolean escape )
+	{
+		useEscapeOnParse = escape;
+	}
+	
 	public static void setUseDoubleSlash( boolean newState )
 	{
 		useDoubleSlash = newState;
@@ -187,7 +193,7 @@ public class UnicodeChecker
 	public static String parseToUnicode(CharSequence str, boolean parsePlica, boolean doubleSlash )
 	{
 		str = fixUnicode0300FromUser( str );
-		return parseToUnicode( (doubleSlash?"\\":"")+"\\u", "", str, parsePlica );
+		return useEscapeOnParse? parseToUnicode( (doubleSlash?"\\":"")+"\\u", "", str, parsePlica ):str.toString().replace( "\\", "\\\\").replace( "'", "''");
 	}
 	
 	public static String parseToUnicode(String unicodePrefix, String unicodeSuffix, CharSequence str, boolean parsePlica)
@@ -211,7 +217,7 @@ public class UnicodeChecker
 			for( int n = 0; n < specialChars.length(); n++ )
 			{
 				int cnum = specialChars.charAt( n );
-				specialTable.put( new Integer( cnum ), null );
+				specialTable.put( cnum, null );
 			}
 		}
 		StringBuilder newStr = new StringBuilder();
@@ -223,11 +229,11 @@ public class UnicodeChecker
 			int cnum = str.charAt( i );
 			if( cnum < 0)
 			{
-				throw new RuntimeException("Caracter n\u00e3o v\u00e0lido: <" + str.charAt( i ) + "/" + ( int )str.charAt( i ) + ">" );
+				throw new RuntimeException("Invalid char: <" + str.charAt( i ) + "/" + ( int )str.charAt( i ) + ">" );
 			}
 
 			if( cnum == TAB || (
-				( specialChars == null || !specialTable.containsKey( new Integer( cnum ) ) ) 
+				( specialChars == null || !specialTable.containsKey( cnum ) ) 
 				&& cnum < 127 && cnum >= 32  && cnum != '\\'
 				&& cnum != '{' && cnum != '}' && ( !parsePlica || cnum != '\'' ) ) )
 			{
@@ -445,6 +451,11 @@ public class UnicodeChecker
 		
 		String toResult = parseToUnicode( result );
 		System.out.println( "Result to double slash: " + toResult );
+		
+		setEscapeOnParse( false );
+		
+		toResult = parseToUnicode( result );
+		System.out.println( "Result to unicode: " + toResult );
 	}
 	
 	public static void setParsePlica( boolean parse )

@@ -15,12 +15,13 @@ import com.healthmarketscience.jackcess.Table;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.Name;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 
 /**
  *
  * @author lflores
  */
-public class TableDefinition
+public class AccessTableDefinition
 {
 	private final Table table;
 	
@@ -30,7 +31,7 @@ public class TableDefinition
 
 	private final Map<String,ColumnDefinition> columns_map = new HashMap<String,ColumnDefinition>();
 
-	public TableDefinition( Table t )
+	public AccessTableDefinition( Table t )
 	{
 		table = t;
 	}
@@ -83,7 +84,7 @@ public class TableDefinition
 //					|| col.getSQLType() == Types.LONGVARCHAR
 					|| col.getSQLType() == Types.VARCHAR )
 			{
-				myCol.sqlSize = new Integer( col.getLength() );
+				myCol.sqlSize = ( int )col.getLength();
 			}
 			myCol.isNotNull = false;
 			columns.add( myCol );
@@ -127,12 +128,13 @@ public class TableDefinition
 					{
 						if( !col.isPrimaryKey )
 						{
-							col.referencedTable = new Name( idx.getReferencedIndex().getTable().getName() );
-							col.referencedColumn = new Name( list.get( 0 ).getName() );
+							col.referencedTable = new TableDefinition( idx.getReferencedIndex().getTable().getName().toString() );
+							col.referencedColumn = new ColumnDefinition();
+							col.referencedColumn.name = new Name( list.get( 0 ).getName() );
 						}
 						else
 						{
-							System.out.println( "Ignoring foreign key on primary key: " + table.getName() + "." + col.name 
+							System.out.println( "Ignoring foreign key index on primary key: " + table.getName() + "." + col.name 
 									+ " idx: " + idx.getName() + " points to: " 
 									+ idx.getReferencedIndex().getTable().getName() + "." 
 									+ list.get( 0 ).getName() );

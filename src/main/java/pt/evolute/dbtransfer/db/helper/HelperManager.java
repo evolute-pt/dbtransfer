@@ -24,10 +24,20 @@ public class HelperManager
 			System.out.println( "MySQL translator" );
 			tr = MySQLServerHelper.getTranslator();
 		}
-                else if( url.startsWith( "jdbc:oracle:" ) )
+        else if( url.startsWith( "jdbc:oracle:" ) )
 		{
 			System.out.println( "Oracle translator" );
 			tr = OracleServerHelper.getTranslator();
+		}
+        else if( url.startsWith( "jdbc:hsqldb:" ) )
+		{
+			System.out.println( "HsqlDB translator" );
+			tr = OracleServerHelper.getTranslator();
+		}
+        else if( url.startsWith( "jdbc:ucanaccess:" ) )
+		{
+			System.out.println( "HsqlDB translator" );
+			tr = HsqlDBServerHelper.getTranslator();
 		}
 		if( tr == null )
 		{

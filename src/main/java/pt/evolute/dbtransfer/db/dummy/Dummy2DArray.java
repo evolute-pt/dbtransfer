@@ -26,7 +26,7 @@ public class Dummy2DArray implements Virtual2DArray
 		{
 			throw new EndOfArrayException();
 		}
-		return new Long( r );
+		return ( long )r;
 	}
 
 	public void set(int i, int i1, Object o)

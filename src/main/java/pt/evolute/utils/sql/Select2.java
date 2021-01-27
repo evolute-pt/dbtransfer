@@ -11,10 +11,10 @@ import pt.evolute.utils.sql.table.Table;
  */
 public class Select2 extends Select
 {
-	public static final Integer JOIN_CROSS = new Integer( 0 );
-	public static final Integer JOIN_LEFT_OUTER = new Integer( 1 );
+	public static final Integer JOIN_CROSS = 0;
+	public static final Integer JOIN_LEFT_OUTER = 1;
 //	public static final Integer JOIN_RIGHT_OUTER = new Integer( 2 );
-	public static final Integer JOIN_INNER = new Integer( 3 );
+	public static final Integer JOIN_INNER = 3;
 	
 	protected Table tables[];
 	protected Integer joinTypes[];

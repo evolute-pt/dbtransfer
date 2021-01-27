@@ -2,7 +2,7 @@ package pt.evolute.dbtransfer;
 
 import java.util.Properties;
 
-public class Config implements Constants{
+public class Config implements ConfigurationProperties{
 	private static Properties PROPS = new Properties();
 	
 	public static boolean ignoreEmpty()
@@ -51,7 +51,7 @@ public class Config implements Constants{
 			}
 			catch( NumberFormatException ex )
 			{
-				System.err.println( "Error in property: TRANSFER_THREADS=" + s );
+				System.err.println( "Error in property: " + TRANSFER_THREADS +  "=" + s );
 			}
 		}
 		return t; 
@@ -67,5 +67,25 @@ public class Config implements Constants{
 
 	public static boolean escapeUnicode() {
 		return getValue( TRANSFER_ESCAPE_UNICODE );
+	}
+	
+	public static String getDestinationTablePrefix()
+	{
+		return PROPS.getProperty( DESTINATION_TABLE_PREFIX, "" );
+	}
+	
+	public static String getAnalyseDeleteIfExists()
+	{
+		return PROPS.getProperty( ANALYSE_DELETE_IF_EXISTS, "false" );
+	}
+	
+	public static String getDiffIgnoreDestinationTableCount()
+	{
+		return PROPS.getProperty( DIFF_IGNORE_DESTINATION_TABLE_COUNT, "false" );
+	}
+	
+	public static String getDiffUseMD5()
+	{
+		return PROPS.getProperty( DIFF_USE_MD5, "true" );
 	}
 }

@@ -20,11 +20,13 @@ public class BackendProvider
 		BACKEND_CLASS_BY_PROTOCOL.put( "postgresql", PostgreSQLBackend.class );
 		BACKEND_CLASS_BY_PROTOCOL.put( "sqlserver", SQLServerBackend.class );
 		BACKEND_CLASS_BY_PROTOCOL.put( "hsqldb", HSQLDBBackend.class );
+		BACKEND_CLASS_BY_PROTOCOL.put( "ucanaccess", HSQLDBBackend.class );
 	}
 
 	private static Map<String,Backend> BACKEND_BY_URL = new HashMap<String,Backend>();
 	private static Map<Class<? extends Backend>,List<Backend>> BACKENDS_BY_CLASS = new HashMap<Class<? extends Backend>,List<Backend>>();
 	
+	@SuppressWarnings("deprecation")
 	public static Backend getBackend( String url )
 	{
 		Backend backend = BACKEND_BY_URL.get( url );
@@ -63,6 +65,7 @@ public class BackendProvider
 		return backend;
 	}
 	
+	@SuppressWarnings("deprecation")
 	public static Backend getDefaultBackend()
 	{
 		Backend backend = null;

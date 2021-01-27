@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -111,7 +110,7 @@ public class ModelProvider extends Connector
 			
 			COLUMN_BY_NAME_CACHE.put( tableName, new HashMap<String,DBColumn>() );
 			ResultSet rs = metadata.getColumns( catalog, schema, (String) table.get( DBTable.NAME ), null );
-			List<DBColumn> columns = new Vector<DBColumn>();
+			List<DBColumn> columns = new ArrayList<DBColumn>();
 			while( rs.next() )
 			{
 				String name = rs.getString( ColumnMetadataConstants.COLUMN_NAME );
@@ -122,8 +121,8 @@ public class ModelProvider extends Connector
 				column.set( DBColumn.TABLE, table );
 				column.set( DBColumn.NAME, name );
 				column.set( DBColumn.TYPE, typeName );
-				column.set( DBColumn.TYPE_ID, new Integer( sqlDataType ) );
-				column.set( DBColumn.LENGTH, new Integer( length ) );
+				column.set( DBColumn.TYPE_ID, sqlDataType );
+				column.set( DBColumn.LENGTH, length );
 				columns.add( column );
 				COLUMN_BY_NAME_CACHE.get( tableName ).put( name, column );
 			}
@@ -146,8 +145,8 @@ public class ModelProvider extends Connector
 		if(!PRIMARY_KEY_CACHE.containsKey( tableName ) )
 		{
 			ResultSet rs = metadata.getPrimaryKeys( null, schema, ( String ) table.get( DBTable.NAME ) );
-			List<int[]> seqs = new Vector<int[]>();
-			List<String> names = new Vector<String>();
+			List<int[]> seqs = new ArrayList<int[]>();
+			List<String> names = new ArrayList<String>();
 			for( int n = 0; rs.next(); n++ )
 			{
 				String name = rs.getString( PrimaryKeyMetadataConstants.COLUMN_NAME );
@@ -173,7 +172,7 @@ public class ModelProvider extends Connector
 						}
 					}
 				} );
-			List<DBColumn> columns = new Vector<DBColumn>();
+			List<DBColumn> columns = new ArrayList<DBColumn>();
 			for( int n = 0; n < seqs.size(); n++ )
 			{
 				DBColumn column = getColumnByTableAndName( table, names.get( seqs.get( n )[ 1 ] ) );
@@ -211,16 +210,16 @@ public class ModelProvider extends Connector
 			if( !tableNames.containsKey( reference ) )
 			{
 				tableNames.put( reference, new String[]{ srcTable, destTable } );
-				columnNames.put( reference, new Vector<String>() );
-				destColumnNames.put( reference, new Vector<String>() );
-				seqs.put( reference, new Vector<int[]>() );
+				columnNames.put( reference, new ArrayList<String>() );
+				destColumnNames.put( reference, new ArrayList<String>() );
+				seqs.put( reference, new ArrayList<int[]>() );
 			}
 			columnNames.get( reference ).add( srcColumn );
 			destColumnNames.get( reference ).add( destColumn );
 			seqs.get( reference ).add( new int[]{ seq, seqs.get( reference ).size() } );
 		}
 		rs.close();
-		List<DBReference> references = new Vector<DBReference>();
+		List<DBReference> references = new ArrayList<DBReference>();
 		String keys[] = tableNames.keySet().toArray( new String[ 0 ] );
 		for( int k = 0; k < keys.length; k++ )
 		{
@@ -246,8 +245,8 @@ public class ModelProvider extends Connector
 			String destTableName = tableNames.get( keys[ k ] )[ 1 ];
 			DBTable srcTable = getTableByName( srcTableName );
 			DBTable destTable = getTableByName( destTableName );
-			List<DBColumn> srcColumns = new Vector<DBColumn>();
-			List<DBColumn> destColumns = new Vector<DBColumn>();
+			List<DBColumn> srcColumns = new ArrayList<DBColumn>();
+			List<DBColumn> destColumns = new ArrayList<DBColumn>();
 			for( int n = 0; n < referenceSeqs.size(); n++ )
 			{
 //				System.out.println( srcTable.get( DBTable.NAME ) + "." + columnNames.get( keys[ k ] ).get( referenceSeqs.get( n )[ 1 ] ) );
@@ -358,7 +357,7 @@ public class ModelProvider extends Connector
 	{
 	// create the tree
 		DefaultMutableTreeNode root = new DefaultMutableTreeNode( table );
-		List<DBHierarchy> hierarchysList = new Vector<DBHierarchy>();
+		List<DBHierarchy> hierarchysList = new ArrayList<DBHierarchy>();
 		buildTree( root, hierarchysList );
 		return hierarchysList;
 	}

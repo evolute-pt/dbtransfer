@@ -12,8 +12,8 @@ public class ColumnDefinition
 	public Integer sqlSize;
 	public String defaultValue;
 	public boolean isNotNull;
-	public Name referencedTable;
-	public Name referencedColumn;
+	public TableDefinition referencedTable;
+	public ColumnDefinition referencedColumn;
 	public boolean isPrimaryKey;
 	public String foreignKeyName;
 }

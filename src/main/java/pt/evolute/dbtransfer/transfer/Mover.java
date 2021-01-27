@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Map;
 
 import pt.evolute.dbtransfer.Config;
-import pt.evolute.dbtransfer.Constants;
+import pt.evolute.dbtransfer.ConfigurationProperties;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
-import pt.evolute.dbtransfer.db.beans.Name;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
 import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
@@ -28,7 +28,7 @@ import pt.evolute.utils.string.UnicodeChecker;
  *
  * @author  lflores
  */
-public class Mover extends Connector implements Constants
+public class Mover extends Connector implements ConfigurationProperties
 {
 	public final long MAX_READ_ROWS;
 	public final boolean IGNORE_BLOB;
@@ -36,7 +36,7 @@ public class Mover extends Connector implements Constants
     public static final int MAX_BATCH_ROWS = 1024;
     public static final int MAX_SHARED_ROWS = 1000000;
 
-    private final Name TABLES[];
+    private final TableDefinition TABLES[];
     private final ConnectionDefinitionBean SRC;
     private final ConnectionDefinitionBean DST;
     
@@ -85,7 +85,7 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
         	}
         	catch( NumberFormatException ex )
         	{
-        		System.out.println( "Invalid property: " + Constants.TRANSFER_MAX_READ_ROWS + " - " + str );
+        		System.out.println( "Invalid property: " + ConfigurationProperties.TRANSFER_MAX_READ_ROWS + " - " + str );
         	}
         }
         MAX_READ_ROWS = maxRead;
@@ -94,7 +94,7 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
         	System.out.println( "Max read rows: " + MAX_READ_ROWS );
         }
         
-        List<Name> v = CON_SRC.getTableList();
+        List<TableDefinition> v = CON_SRC.getTableList();
         if( CHECK_DEPS )
         {
             System.out.println( "Reordering tables for dependencies (" + v.size() + " tables)" );
@@ -107,21 +107,21 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
                 v = reorder( v );
             }
         }
-        TABLES = v.toArray( new Name[ v.size() ] );
+        TABLES = v.toArray( new TableDefinition[ v.size() ] );
     }
 
-    private List<Name> reorder(List<Name> inputList) throws Exception 
+    private List<TableDefinition> reorder(List<TableDefinition> inputList) throws Exception 
     {
-        Map<Name,Name> noDepsTablesMap = new HashMap<Name,Name>();
-        List<Name> deps = new ArrayList<Name>();
-        List<Name> list = new ArrayList<Name>();
+        Map<TableDefinition,TableDefinition> noDepsTablesMap = new HashMap<TableDefinition,TableDefinition>();
+        List<TableDefinition> deps = new ArrayList<TableDefinition>();
+        List<TableDefinition> list = new ArrayList<TableDefinition>();
         while( !inputList.isEmpty() || !deps.isEmpty() )
         {
             if( !deps.isEmpty() )
             {
                 inputList.addAll( deps );
             }
-            for( Name n: inputList )
+            for( TableDefinition n: inputList )
             {
                 if( JDBCConnection.debug )
                 {

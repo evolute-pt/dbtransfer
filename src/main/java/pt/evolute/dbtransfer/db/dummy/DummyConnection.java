@@ -41,6 +41,7 @@ import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.Name;
 import pt.evolute.dbtransfer.db.beans.PrimaryKeyDefinition;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.beans.UniqueDefinition;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.utils.arrays.Virtual2DArray;
@@ -56,7 +57,7 @@ public class DummyConnection implements DBConnection {
 	
 	private final int rows;
 	
-    private final List<Name> TABLES_LIST = new ArrayList<Name>();
+    private final List<TableDefinition> TABLES_LIST = new ArrayList<TableDefinition>();
     private final List<DBTable> DBTABLES_LIST = new ArrayList<DBTable>();
     private ArrayList<ColumnDefinition> COLUMNS_LIST = null; 
     private final boolean ignoreEmpty;
@@ -89,12 +90,12 @@ public class DummyConnection implements DBConnection {
 		return url;
 	}
 
-	public List<Name> getTableList()
+	public List<TableDefinition> getTableList()
             throws Exception {
         if (TABLES_LIST.isEmpty()) {
         	if( !ignoreEmpty || rows != 0 )
         	{
-        		Name n = new Name( table );
+        		TableDefinition n = new TableDefinition( table );
         		TABLES_LIST.add( n );
         		COLUMNS_LIST = new ArrayList<ColumnDefinition>();
         		ColumnDefinition col = new ColumnDefinition();
@@ -109,7 +110,7 @@ public class DummyConnection implements DBConnection {
         return TABLES_LIST;
     }
 
-    public List<ColumnDefinition> getColumnList(Name table) throws Exception {
+    public List<ColumnDefinition> getColumnList(TableDefinition table) throws Exception {
         return COLUMNS_LIST;
     }
 
@@ -121,18 +122,18 @@ public class DummyConnection implements DBConnection {
     	return null;
     }
 
-    public PrimaryKeyDefinition getPrimaryKey(Name table) throws Exception {
+    public PrimaryKeyDefinition getPrimaryKey(TableDefinition table) throws Exception {
         PrimaryKeyDefinition pk = new PrimaryKeyDefinition();
         pk.name = table + "_" + "pk";
         pk.columns.addAll( COLUMNS_LIST);
         return pk;
     }
 
-    public List<ForeignKeyDefinition> getForeignKeyList(Name table) throws Exception {
+    public List<ForeignKeyDefinition> getForeignKeyList(TableDefinition table) throws Exception {
         return new ArrayList<ForeignKeyDefinition>();
     }
 
-    public Virtual2DArray getFullTable(Name table) throws Exception {
+    public Virtual2DArray getFullTable(TableDefinition table) throws Exception {
     	Virtual2DArray array = null;
     	if( !COLUMNS_LIST.isEmpty() && table.originalName.contentEquals( this.table ) )
     	{
@@ -1073,14 +1074,14 @@ public class DummyConnection implements DBConnection {
     }
 
     @Override
-    public List<UniqueDefinition> getUniqueList(Name table)
+    public List<UniqueDefinition> getUniqueList(TableDefinition table)
             throws Exception {
         List<UniqueDefinition> list = new LinkedList<UniqueDefinition>();
         return list;
     }
 
     @Override
-    public int getRowCount(Name table) throws Exception {
+    public int getRowCount(TableDefinition table) throws Exception {
         return rows;
     }
 

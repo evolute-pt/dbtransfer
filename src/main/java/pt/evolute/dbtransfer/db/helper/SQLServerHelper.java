@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import pt.evolute.dbtransfer.db.DBConnection;
-import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
 
 public class SQLServerHelper extends NullHelper
 {

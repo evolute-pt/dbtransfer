@@ -1,4 +1,4 @@
 Sample properties files.
 ---
-A good way to get connection properties is to use DBVisualizer (http://www.dbvis.com/) to test the connection first.
+A good way to get connection properties is to use DBeaver (http://www.dbeaver.io/) to test the connection first.
 
