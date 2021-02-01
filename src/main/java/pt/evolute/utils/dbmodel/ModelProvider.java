@@ -289,7 +289,7 @@ public class ModelProvider extends Connector
 		String tableName = ( String )table.get( DBTable.NAME );
 		if( !IMPORTED_KEY_CACHE.containsKey( tableName ) )
 		{
-			System.out.println( "GIKT <" + tableName + ">" );
+			System.out.println( "GetImportedKeysForTable <" + tableName + ">" );
 			ResultSet rs = metadata.getImportedKeys( catalog, schema, ( String )table.get( DBTable.NAME ) );
 			
 			IMPORTED_KEY_CACHE.put( tableName, readForeignKeys( rs ) );

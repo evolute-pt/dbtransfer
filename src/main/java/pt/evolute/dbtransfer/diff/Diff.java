@@ -115,7 +115,10 @@ public class Diff extends Connector implements ConfigurationProperties
 		Map<Object,TableRow> src = loadTable( table, CON_SRC, false );
 		Map<Object,TableRow> dest = loadTable( table, CON_DEST, true );
 		// run src - find new and diff
-		System.out.println( "Checking new and updated rows (" + src.size() + " vs " + dest.size() + ")" );
+		if( Config.debug() )
+		{
+			System.out.println( "Checking new and updated rows (" + src.size() + " vs " + dest.size() + ")" );
+		}
 		int i = 0;
 		int u = 0;
 		int d = 0;
@@ -139,16 +142,15 @@ public class Diff extends Connector implements ConfigurationProperties
 			}
 			else
 			{
-				if( "ctf".equals( table.toString() ) )
-				{
-					System.out.println( "INSERT");
-				}
 				insertRow( table, pk );
 				++i;
 			}
 		}
 		// run dst - find deleted
-		System.out.println( "Checking deleted rows" );
+		if( Config.debug() )
+		{
+			System.out.println( "Checking deleted rows" );
+		}
 		for( Object pk: dest.keySet() )
 		{
 			if( !src.containsKey( pk ) )
@@ -482,27 +484,37 @@ public class Diff extends Connector implements ConfigurationProperties
 			{
 				String sql1 = "ALTER TABLE " + table + " ADD COLUMN " 
 					+ COLUMN_MODIFIED_ACTION + " CHAR( 1 ) NOT NULL DEFAULT 'i';";
-					CON_DEST.executeQuery( sql1 );
+				Update update = new Update( sql1 );
+				update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
+				CON_DEST.executeQuery( update.toString() );
 				System.out.println( sql1 );
 				String sql2 = "ALTER TABLE " + table + " ADD CONSTRAINT "
 					+ table + "_" + COLUMN_MODIFIED_ACTION + "_ck CHECK( "
 					+ COLUMN_MODIFIED_ACTION + " IN ( 'i', 'u', 'd' ) )";
 				System.out.println( sql2 );
-				CON_DEST.executeQuery( sql2 );
+				update = new Update( sql2 );
+				update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
+				CON_DEST.executeQuery( update.toString() );
+				
 			}
 			if( !modifiedStamp )
 			{
 				String sql3 = "ALTER TABLE " + table + " ADD COLUMN " 
 				+ COLUMN_MODIFIED_STAMP + " TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now();";
 				System.out.println( sql3 );
-				CON_DEST.executeQuery( sql3 );
+				Update update = new Update( sql3 );
+				update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
+				CON_DEST.executeQuery( update.toString() );
+				
 			}
 			if( !modifiedComment )
 			{
-				String sql1 = "ALTER TABLE " + table + " ADD COLUMN " 
+				String sql4 = "ALTER TABLE " + table + " ADD COLUMN " 
 					+ COLUMN_MODIFIED_COMMENT + " VARCHAR( 255 );";
-				CON_DEST.executeQuery( sql1 );
-				System.out.println( sql1 );
+				System.out.println( sql4 );
+				Update update = new Update( sql4 );
+				update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
+				CON_DEST.executeQuery( update.toString() );
 			}
 		}
 	}
