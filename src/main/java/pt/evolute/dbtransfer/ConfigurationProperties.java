@@ -46,6 +46,8 @@ public interface ConfigurationProperties
     public final static String DIFF_COMMENT = "DIFF.COMMENT";
     public final static String DIFF_USE_MD5 = "DIFF.USE_MD5";
     public final static String DIFF_IGNORE_DESTINATION_TABLE_COUNT = "DIFF.IGNORE_DESTINATION_TABLE_COUNT";
+    public final static String DIFF_IGNORE_TABLES_WITHOUT_PRIMARY_KEY = "DIFF.IGNORE_TABLES_WITHOUT_PRIMARY_KEY";
+    public final static String DIFF_PRIMARY_KEY_ALL_COLUMNS_IF_MISSING = "DIFF.PRIMARY_KEY_ALL_COLUMNS_IF_MISSING";
 
     public final static String DEBUG = "DEBUG";
 }

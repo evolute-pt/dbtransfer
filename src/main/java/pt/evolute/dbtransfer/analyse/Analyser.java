@@ -44,7 +44,7 @@ public class Analyser implements ConfigurationProperties
         
         boolean ignoreEmpty = Config.ignoreEmpty();
         
-		CON_SRC = DBConnector.getConnection( SRC.getUrl(), SRC.getUser(), SRC.getPassword(), ignoreEmpty, SRC.getSchema() );
+		CON_SRC = DBConnector.getConnection( SRC.getUrl(), SRC.getUser(), SRC.getPassword(), ignoreEmpty );
 		List<TableDefinition> v = CON_SRC.getTableList();
 		TABLES = v.toArray( new TableDefinition[ v.size() ] );
 		
@@ -92,7 +92,7 @@ public class Analyser implements ConfigurationProperties
 			v.add( buff );
 		}
 		
-        DBConnection destCon = DBConnector.getConnection( DST.getUrl(), DST.getUser(), DST.getPassword(), false, DST.getSchema() );
+        DBConnection destCon = DBConnector.getConnection( DST.getUrl(), DST.getUser(), DST.getPassword(), false );
 		
         for( int i = 0; i < v.size(); ++i )
 		{

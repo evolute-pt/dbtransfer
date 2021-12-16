@@ -40,7 +40,7 @@ public class DBColumn extends DefaultLightPropertyObject
 	@Override
 	public String toString()
 	{
-		return ( String ) get( NAME ) + "PK: " + get( IS_PRIMARY_KEY ) + " FK: " + get( IS_FOREIGN_KEY );// + " - " + hashCode();
+		return ( String ) get( NAME ) + " PK: " + get( IS_PRIMARY_KEY ) + " FK: " + get( IS_FOREIGN_KEY );// + " - " + hashCode();
 	}
 	
 	public Integer getType()

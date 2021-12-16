@@ -26,50 +26,64 @@ public class Main
 		System.out.println( "BEGIN: " + new Date() );
 		long start = System.currentTimeMillis();
 		
-                ConnectionDefinitionBean srcBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), ConfigurationProperties.SOURCE_PROPS );
-                ConnectionDefinitionBean dstBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), ConfigurationProperties.DESTINATION_PROPS );
-                
-                JDBCConnection.debug = Config.debug();
-		if( Config.analyse() )
+        try
+        {
+			ConnectionDefinitionBean srcBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), ConfigurationProperties.SOURCE_PROPS );
+	        ConnectionDefinitionBean dstBean = ConnectionDefinitionBean.loadBean( HelperManager.getProperties(), ConfigurationProperties.DESTINATION_PROPS );
+	                
+	        JDBCConnection.debug = Config.debug();
+			if( Config.analyse() )
+			{
+				System.out.println( "Analysing" );
+				Analyser a = new Analyser( srcBean, dstBean );
+				a.cloneDB();
+			}
+			if( Config.transfer() )
+			{
+	                    if( !Config.checkDependencies() )
+	                    {
+	                    	AsyncStatement.PARALLEL_THREADS = Config.getParallelThreads();
+				        }
+	                    System.out.println( "Transfering" );
+	                    Mover m = new Mover( srcBean, dstBean );
+	                    try
+	                    {
+	                            m.moveDB();
+	                    }
+	                    catch( SQLException ex )
+	                    {
+	                            ex.printStackTrace( System.out );
+	                            ex.printStackTrace();
+	//				ErrorLogger.logException( ex );
+	                            throw ex.getNextException();
+	                    }
+			}
+			if( Config.constrain() )
+			{
+				System.out.println( "Constraining" );
+				Constrainer c = new Constrainer(HelperManager.getProperties(), srcBean, dstBean );
+				c.constrainDB();
+			}
+			if( Config.diff() )
+			{
+				System.out.println( "Diffing" );
+				Diff d = new Diff( srcBean, dstBean );
+				d.diffDb();
+			}
+        }
+        catch( Throwable th )
+        {
+        	th.printStackTrace( System.out );
+        }
+		System.out.println( "END: " + new Date() );
+		System.out.println( "Transfer took: " + ( System.currentTimeMillis() - start ) / 1000 + " seconds" );
+		
+		try
 		{
-			System.out.println( "Analysing" );
-			Analyser a = new Analyser( srcBean, dstBean );
-			a.cloneDB();
+			Thread.sleep( 2000 );
 		}
-		if( Config.transfer() )
-		{
-                    if( !Config.checkDependencies() )
-                    {
-                    	AsyncStatement.PARALLEL_THREADS = Config.getParallelThreads();
-			        }
-                    System.out.println( "Transfering" );
-                    Mover m = new Mover( srcBean, dstBean );
-                    try
-                    {
-                            m.moveDB();
-                    }
-                    catch( SQLException ex )
-                    {
-                            ex.printStackTrace( System.out );
-                            ex.printStackTrace();
-//				ErrorLogger.logException( ex );
-                            throw ex.getNextException();
-                    }
-		}
-		if( Config.constrain() )
-		{
-			System.out.println( "Constraining" );
-			Constrainer c = new Constrainer(HelperManager.getProperties(), srcBean, dstBean );
-			c.constrainDB();
-		}
-		if( Config.diff() )
-		{
-			System.out.println( "Diffing" );
-			Diff d = new Diff( srcBean, dstBean );
-			d.diffDb();
-		}
-			System.out.println( "END: " + new Date() );
-			System.out.println( "Transfer took: " + ( System.currentTimeMillis() - start ) / 1000 + " seconds" );
+		catch( InterruptedException e )
+		{}
 	}
 	
 	/**

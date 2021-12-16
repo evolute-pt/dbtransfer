@@ -2,6 +2,7 @@ package pt.evolute.dbtransfer.diff;
 
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import pt.evolute.dbtransfer.analyse.Analyser;
 import pt.evolute.dbtransfer.constrain.Constrainer;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.DBConnector;
+import pt.evolute.dbtransfer.db.PrimaryKeyValue;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
 import pt.evolute.dbtransfer.db.beans.TableDefinition;
@@ -34,6 +36,10 @@ import pt.evolute.utils.sql.backend.BackendProvider;
 
 public class Diff extends Connector implements ConfigurationProperties
 {
+	private final static DateFormat D_F = DateFormat.getDateInstance();
+	private final static DateFormat T_F = DateFormat.getTimeInstance();
+	private final static DateFormat TS_F = DateFormat.getDateTimeInstance();
+	
 	private static final String TABLE_DBTRANSFER_UPDATE = "dbtransfer_update";
 	
 	private static final String COLUMN_MODIFIED_STAMP = "modified_stamp";
@@ -51,6 +57,12 @@ public class Diff extends Connector implements ConfigurationProperties
 	private final DBConnection CON_DEST;
 	
 	private final String comment;
+	
+	private int totalInserted = 0;
+	private int totalUpdated = 0;
+	private int totalDeleted = 0;
+	
+//	private static final NumberFormat NF = DecimalFormat.getNumberInstance();
 		
 	public Diff( ConnectionDefinitionBean src, ConnectionDefinitionBean dst )
 		throws Exception
@@ -76,6 +88,8 @@ public class Diff extends Connector implements ConfigurationProperties
 	{
 		checkDestinationDb();
 		diff();
+		
+		System.out.println( "Total changes i " + totalInserted + " u " + totalUpdated + " d " + totalDeleted );
 	}
 	
 	private void diff()
@@ -86,9 +100,16 @@ public class Diff extends Connector implements ConfigurationProperties
 		{
 			map.put( t.saneName, t );
 		}
-		for( DBTable table: CON_DEST.getSortedTables() )
+		for( DBTable table: CON_SRC.getSortedTables() )
 		{
-			if( map.containsKey( table.toString() ) )
+			if( "true".equals( Config.getDiffIgnoreTablesWithoutPrimaryKey() ) )
+			{
+				if( table.getPrimaryKey().isEmpty() )
+				{
+					continue;
+				}
+			}
+			if( map.containsKey( table.getSaneName() ) )
 			{
 				if( !TABLE_DBTRANSFER_UPDATE.equals( table.toString() ) )
 				{
@@ -99,8 +120,13 @@ public class Diff extends Connector implements ConfigurationProperties
 					catch( Exception ex )
 					{
 						ErrorLogger.logException( ex );
+						throw ex;
 					}
 				}
+			}
+			else
+			{
+				System.out.println( "Table not found: " + table.getSaneName() );
 			}
 		}
 	}
@@ -112,8 +138,8 @@ public class Diff extends Connector implements ConfigurationProperties
 		System.out.println( "Testing table: " + table.toString() + " freemem: " 
 					+ ( Runtime.getRuntime().freeMemory() / ( 1024 * 1024 ) ) );
 		// full RAM algorithm
-		Map<Object,TableRow> src = loadTable( table, CON_SRC, false );
-		Map<Object,TableRow> dest = loadTable( table, CON_DEST, true );
+		Map<PrimaryKeyValue,TableRow> src = loadTable( table, CON_SRC, false );
+		Map<PrimaryKeyValue,TableRow> dest = loadTable( table, CON_DEST, true );
 		// run src - find new and diff
 		if( Config.debug() )
 		{
@@ -122,7 +148,7 @@ public class Diff extends Connector implements ConfigurationProperties
 		int i = 0;
 		int u = 0;
 		int d = 0;
-		for( Object pk: src.keySet() )
+		for( PrimaryKeyValue pk: src.keySet() )
 		{
 			if( dest.containsKey( pk ) )
 			{
@@ -132,17 +158,18 @@ public class Diff extends Connector implements ConfigurationProperties
 					{
 						System.out.println( "Different rows:\n<" + src.get( pk ).rowMd5 + ">\n<" + dest.get( pk ).rowMd5 + ">" );
 					}
-					updateRow( table, pk );
+					updateRow( table, pk, src.get( pk ) );
 					++u;
 				}
 				else if( "d".equals( dest.get( pk ).status ) )
 				{
 					updateAction( table, pk );
 				}
+				dest.remove( pk );
 			}
 			else
 			{
-				insertRow( table, pk );
+				insertRow( table, pk, src.get( pk ) );
 				++i;
 			}
 		}
@@ -151,22 +178,25 @@ public class Diff extends Connector implements ConfigurationProperties
 		{
 			System.out.println( "Checking deleted rows" );
 		}
-		for( Object pk: dest.keySet() )
+		for( PrimaryKeyValue pk: dest.keySet() )
 		{
-			if( !src.containsKey( pk ) )
+			if( !src.containsKey( pk ) && !"d".equals( dest.get( pk ).status ) )
 			{
 				deleteRow( table, pk );
 				++d;
 			}
 		}
-		CON_DEST.executeQuery( "COMMIT;" );
+//		CON_DEST.executeQuery( "COMMIT;" );
 		System.out.println( "Changes i " + i + " u " + u + " d " + d );
+		totalInserted += i;
+		totalUpdated += u;
+		totalDeleted += d;
 	}
 	
-	private Object[] getRowData( DBTable table, Object pk )
+	private Object[] getRowData( DBTable table, PrimaryKeyValue pk )
 		throws Exception
 	{
-		List<DBColumn> cols = table.getColumns();
+		List<DBColumn> cols = table.getColumnsNoPK();
 		List<String> fields = new ArrayList<String>();
 		for( int i = 0; i < cols.size(); ++i )
 		{
@@ -191,47 +221,88 @@ public class Diff extends Connector implements ConfigurationProperties
 		}
 		catch( Exception ex )
 		{
-			new Exception( "Error in query: " + select.toString() ).printStackTrace();
+			new Exception( "Error in query: <" + select.toString() + ">" ).printStackTrace();
 			throw ex;
 		}
 		return row;
 	}
 	
-	private Expression getPkExpression( DBTable table, Object pk )
+	private Expression getPkExpression( DBTable table, PrimaryKeyValue pk )
 		throws Exception
 	{
+		List<Object> pko = pk.getList();
 		Expression exp = null;
-		if( pk.toString().lastIndexOf( '*' ) == 0 )
+		List<DBColumn> pkf = new ArrayList<DBColumn>( table.getPrimaryKey() );
+		if( pkf.isEmpty() )
 		{
-			Object pkValue = pk.toString().substring( 1 );
-			if( !table.getPrimaryKey().get( 0 ).get( DBColumn.TYPE ).toString().contains( "char" ) )
+			if( Config.debug() )
 			{
-				try
+				System.out.println( "Table without PK (using all columns): " + table.getSaneName() );
+			}
+			if( "true".equals( Config.getDiffPrimaryKeyAllColumnsIfMissing() ) )
+			{
+				pkf = table.getColumnsNoPK();
+				if( Config.debug() )
 				{
-					pkValue = Integer.parseInt( pkValue.toString() );
-				}
-				catch( NumberFormatException ex )
-				{
-					new Exception( "Invalid id: " + table + " / " + pk ).printStackTrace();
-					throw ex;
+					System.out.println( "PK : " + pkf );
 				}
 			}
-			exp = new Field( ( String )table.getPrimaryKey().get( 0 
-					).get( DBColumn.NAME ) ).isEqual( pkValue );
+			else
+			{
+				new Exception( "No PK: " + table );
+			}
 		}
-		else
+		if( pko.size() != pkf.size() )
 		{
-			exp = new Field( getKeyCollapsedField( table ) ).isEqual( pk );
+			throw new Exception( "Invalid PK value for Table: " + pko.size() + " != " + pkf.size() + " " + table.getDestinationName() + " pk: " + pkf + " pkv: " + pk );
 		}
+		if( !pkf.isEmpty() )
+		{
+			exp = new Field( pkf.remove( 0 ).get( DBColumn.NAME ).toString() ).isEqual( pko.remove( 0 ) );
+			for( DBColumn c: pkf )
+			{
+				exp = exp.and( new Field( c.get( DBColumn.NAME ).toString() ).isEqual( pko.remove( 0 ) ) );
+			}
+		}
+//		if( pk.toString().lastIndexOf( '*' ) == 0 )
+//		{
+//			Object pkValue = pk.toString().substring( 1 );
+//			if( !table.getPrimaryKey().get( 0 ).get( DBColumn.TYPE ).toString().toLowerCase().contains( "char" ) )
+//			{
+//				try
+//				{
+//					pkValue = Integer.parseInt( pkValue.toString() );
+//				}
+//				catch( NumberFormatException ex )
+//				{
+//					new Exception( "Invalid id: " + table + " / " + pk ).printStackTrace();
+//					throw ex;
+//				}
+//			}
+//			exp = new Field( ( String )table.getPrimaryKey().get( 0 
+//					).get( DBColumn.NAME ) ).isEqual( pkValue );
+//		}
+//		else
+//		{
+//			exp = new Field( getKeyCollapsedField( table ) ).isEqual( pk );
+//		}
 		return exp;
 	}
 	
-	private void updateRow( DBTable table, Object pk )
+	private void updateRow( DBTable table, PrimaryKeyValue pk, TableRow row )
 		throws Exception
 	{
-		Object rowData[] = getRowData( table, pk );
+		Object rowData[] = null;
+		if( row != null )
+		{
+			rowData = row.row.toArray();
+		}
+		else
+		{
+			getRowData( table, pk );
+		}
 		List<Assignment> assigns = new ArrayList<Assignment>();
-		List<DBColumn> cols = table.getColumns();
+		List<DBColumn> cols = table.getColumnsNoPK();
 		for( int i = 0; i < rowData.length; ++i )
 		{
 			if( !COLUMN_MODIFIED_ACTION.equals( cols.get( i ).get( DBColumn.NAME ) )
@@ -251,9 +322,9 @@ public class Diff extends Connector implements ConfigurationProperties
 		System.out.println( "U " + update );
 		try
 		{
-			CON_DEST.executeQuery( "BEGIN" );
+//			CON_DEST.executeQuery( "BEGIN" );
 			CON_DEST.executeQuery( update.toString() );
-			CON_DEST.executeQuery( "COMMIT" );
+//			CON_DEST.executeQuery( "COMMIT" );
 		}
 		catch( Exception ex )
 		{
@@ -262,7 +333,7 @@ public class Diff extends Connector implements ConfigurationProperties
 		}
 	}
 	
-	private void updateAction( DBTable table, Object pk )
+	private void updateAction( DBTable table, PrimaryKeyValue pk )
 		throws Exception
 	{
 		Assignment assigns[] = new Assignment[ 3 ];
@@ -283,12 +354,20 @@ public class Diff extends Connector implements ConfigurationProperties
 		}
 	}
 	
-	private void insertRow( DBTable table, Object pk )
+	private void insertRow( DBTable table, PrimaryKeyValue pk, TableRow row )
 		throws Exception
 	{
-		Object rowData[] = getRowData( table, pk );
+		Object rowData[] = null;
+		if( row != null )
+		{
+			rowData = row.row.toArray();
+		}
+		else
+		{
+			getRowData( table, pk );
+		}
 		List<Assignment> assigns = new ArrayList<Assignment>();
-		List<DBColumn> cols = table.getColumns();
+		List<DBColumn> cols = table.getColumnsNoPK();
 		for( int i = 0; i < rowData.length; ++i )
 		{
 			if( !COLUMN_MODIFIED_ACTION.equals( cols.get( i ).get( DBColumn.NAME ) )
@@ -301,13 +380,20 @@ public class Diff extends Connector implements ConfigurationProperties
 		assigns.add( new Assignment( COLUMN_MODIFIED_ACTION, "i" ) );
 		assigns.add( new Assignment( COLUMN_MODIFIED_COMMENT, comment ) );
 		assigns.add( new Assignment( COLUMN_MODIFIED_STAMP, new Timestamp( System.currentTimeMillis() ) ) );
-		
+		List<DBColumn> pks = table.getPrimaryKey();
+		if( !pks.isEmpty() )
+		{
+			for( int i = 0; i < pks.size(); ++i )
+			{
+				assigns.add( new Assignment( pks.get( i ).get( DBColumn.NAME ).toString(), pk.get( i ) ) );
+			}
+		}
 		Insert insert = new Insert( table.toString(), assigns.toArray( new Assignment[ assigns.size() ] ) );
 		insert.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
 		CON_DEST.executeQuery( insert.toString() );
 	}
 	
-	private void deleteRow( DBTable table, Object pk )
+	private void deleteRow( DBTable table, PrimaryKeyValue pk )
 		throws Exception
 	{
 		Update update = new Update( table.toString(), new Assignment[]{
@@ -319,90 +405,158 @@ public class Diff extends Connector implements ConfigurationProperties
 		CON_DEST.executeQuery( update.toString() );
 	}
 	
-	private static String getKeyCollapsedField( DBTable table )
-		throws Exception
-	{
-		if( Config.debug() )
-		{
-			System.out.println( "T: " + table.toString() );
-		}
-		List<DBColumn> pks = table.getPrimaryKey();
-		StringBuilder sbPk = new StringBuilder( "'*'||" );
-		if( !pks.isEmpty() )
-		{
-			sbPk.append( pks.get( 0 ).get( DBColumn.NAME ) );
-			for( int i = 1; i < pks.size(); ++i )
-			{
-				sbPk.append( "||'*'||" );
-				sbPk.append( pks.get( i ).get( DBColumn.NAME ) );
-			}
-		}
-		else
-		{
-			throw new Exception( "Diff needs Primary Key on table - " + table.toString() );
-		}
-		return sbPk.toString();
-	}
+//	private static String getKeyCollapsedField( DBTable table )
+//		throws Exception
+//	{
+//		if( Config.debug() )
+//		{
+//			System.out.println( "T: " + table.toString() );
+//		}
+//		List<DBColumn> pks = table.getPrimaryKey();
+//		if( pks.isEmpty() && "true".equals( Config.getDiffPrimaryKeyAllColumnsIfMissing() ) )
+//		{
+//			pks = table.getColumnsNoPK();
+//		}
+//		StringBuilder sbPk = new StringBuilder( "'*'||" );
+//		if( !pks.isEmpty() )
+//		{
+//			sbPk.append( pks.get( 0 ).get( DBColumn.NAME ) );
+//			for( int i = 1; i < pks.size(); ++i )
+//			{
+//				sbPk.append( "||'*'||" );
+//				sbPk.append( pks.get( i ).get( DBColumn.NAME ) );
+//			}
+//		}
+//		else
+//		{
+//			throw new Exception( "Diff needs Primary Key on table - " + table.toString() );
+//		}
+//		return sbPk.toString();
+//	}
 	
-	private static Map<Object,TableRow> loadTable( DBTable table, DBConnection con, boolean getAction )
+	private static Map<PrimaryKeyValue,TableRow> loadTable( DBTable table, DBConnection con, boolean getAction )
 		throws Exception
 	{
 		List<DBColumn> cols = table.getColumnsNoPK();
-		StringBuilder sb = new StringBuilder( "'*/'||COALESCE(" );
-		sb.append( cols.get( 0 ).get( DBColumn.NAME ) );
-		sb.append( ",'-/-')" );
-		for( int i = 1; i < cols.size(); ++i )
+		List<String> str = new ArrayList<String>();
+		for( int i = 0; i < cols.size(); ++i )
 		{
 			if( !COLUMN_MODIFIED_ACTION.equals( cols.get( i ).get( DBColumn.NAME ) )
 					&& !COLUMN_MODIFIED_STAMP.equals( cols.get( i ).get( DBColumn.NAME ) )
 					&& !COLUMN_MODIFIED_COMMENT.equals( cols.get( i ).get( DBColumn.NAME ) ) )
 			{
-				sb.append( "||'*/'||COALESCE(" );
+//				if( i > 0 )
+//				{
+//					sb.append( "||" );
+//				}
+//				sb.append( "'*/'||COALESCE(" );
 				if( cols.get( i ).getType().equals( Types.TIMESTAMP ) )
 				{
-					sb.append( "TO_CHAR("+cols.get( i ).get( DBColumn.NAME )+",'YYYY/MM/DD HH24:MI:SS')" );
+//					sb.append( "TO_CHAR("+cols.get( i ).get( DBColumn.NAME )+",'YYYY/MM/DD HH24:MI:SS')" );
+//					s += "TO_CHAR("+cols.get( i ).get( DBColumn.NAME )+",'YYYY/MM/DD HH24:MI:SS')";
+					str.add( "" + cols.get( i ).get( DBColumn.NAME ) );
+				}
+				else if( cols.get( i ).getType().equals( Types.INTEGER )
+						|| cols.get( i ).getType().equals( Types.TINYINT )
+						|| cols.get( i ).getType().equals( Types.BIGINT ) )
+				{
+//					sb.append( "'.'||"+cols.get( i ).get( DBColumn.NAME ) );
+					str.add( "" + cols.get( i ).get( DBColumn.NAME ) );
+				}
+				else if( cols.get( i ).getType().equals( Types.FLOAT )
+						|| cols.get( i ).getType().equals( Types.DOUBLE )
+						|| cols.get( i ).getType().equals( Types.NUMERIC ) )
+				{
+//					sb.append( "'.'||"+cols.get( i ).get( DBColumn.NAME ) );
+					str.add( "" + cols.get( i ).get( DBColumn.NAME ) );
 				}
 				else
 				{
-					sb.append( cols.get( i ).get( DBColumn.NAME ) );
+//					sb.append( cols.get( i ).get( DBColumn.NAME ) );
+					str.add( "" + cols.get( i ).get( DBColumn.NAME ) );
 				}
-				sb.append( ",'-/-')" );
+//				sb.append( ",'.')" );
 			}
 		}
-		String pkField = getKeyCollapsedField( table );
-		String fields[] = new String[ getAction? 3: 2 ];
-		fields[ 0 ] = pkField;
-		if( Boolean.TRUE.toString().equals( Config.getDiffUseMD5() ) )
-		{
-			fields[ 1 ] = "md5(" + sb.toString() + ")";
-		}
-		else
-		{
-			fields[ 1 ] = sb.toString();
-		}
+		List<String> fields = getPrimaryKeyFields( table );
+		String pka[] = fields.toArray( new String[ fields.size() ] );
+		List<String> cos = getNonPrimaryKeyFields( table );
+		fields.addAll( cos );
+		String colsa[] = cos.toArray( new String[ cos.size() ] );
+//		String fields[] = new String[ getAction? 3: 2 ];
+//		fields[ 0 ] = pkField;
+//		if( Boolean.TRUE.toString().equals( Config.getDiffUseMD5() ) )
+//		{
+//			fields[ 1 ] = "md5(" + sb.toString() + ")";
+//		}
+//		else
+//		{
+//			fields[ 1 ] = sb.toString();
+//		}
 		if( getAction )
 		{
-			fields[ 2 ] = COLUMN_MODIFIED_ACTION;
+//			fields[ 2 ] = COLUMN_MODIFIED_ACTION;
+			fields.add( COLUMN_MODIFIED_ACTION );
 		}
-		Select2 select = new Select2( table.toString(), null, fields, new String[]{ pkField } );
+		List<String> order = new ArrayList<>();
+		for( int i = 1; i <= pka.length; ++i )
+		{
+			order.add( "" + i );
+		}
+		String ordera[] = order.toArray( new String[ order.size() ] );
+		Select2 select = new Select2( table.toString(), null, fields.toArray( new String[ fields.size() ] ), ordera );
 		System.out.println( "Load Table: " + select.toString() );
-		Map<Object,TableRow> map = new HashMap<Object,TableRow>();
+		Map<PrimaryKeyValue,TableRow> map = new HashMap<PrimaryKeyValue,TableRow>();
 		try
 		{
 			Virtual2DArray array = con.executeQuery( select.toString() );
 			
 			for( int i = 0; i < Integer.MAX_VALUE; ++i )
 			{
+				// rows
 				try
 				{
-					Object id = array.get( i, 0 );
+					PrimaryKeyValue pkv = new PrimaryKeyValue();
+					// columns - pk
 					TableRow row = new TableRow();
-					row.rowMd5 = ( String )array.get( i, 1 );
+					for( int pki = 0; pki < pka.length; ++pki )
+					{
+						pkv.add( array.get( i, pki ) );
+					}
+					StringBuilder sb = new StringBuilder( "*" );
+					for( int f = 0; f < colsa.length; ++f )
+					{
+						Object o = array.get( i, f + pka.length );
+						row.row.add( o );
+						if( o == null )
+						{
+							sb.append( "null" );
+						}
+						else if( o instanceof java.sql.Date )
+						{
+							sb.append( D_F.format( o ) );
+						}
+						else if( o instanceof java.sql.Time )
+						{
+							sb.append( T_F.format( o ) );
+						}
+						else if( o instanceof java.sql.Timestamp )
+						{
+							sb.append( TS_F.format( o ) );
+						}
+						else
+						{
+							sb.append( o );
+						}
+						sb.append( "*" );
+					}
+					
+					row.rowMd5 = sb.toString();
 					if( getAction )
 					{
-						row.status = ( String )array.get( i, 2 );
+						row.status = ( String )array.get( i, pka.length + colsa.length );
 					}
-					map.put( id, row );
+					map.put( pkv, row );
 				}
 				catch( EndOfArrayException ex )
 				{
@@ -419,6 +573,32 @@ public class Diff extends Connector implements ConfigurationProperties
 		return map;
 	}
 	
+	private static List<String> getPrimaryKeyFields(DBTable table) throws Exception 
+	{
+		List<String> pkl = new ArrayList<String>();
+		List<DBColumn> cols = table.getPrimaryKey();
+		if( cols.isEmpty() && "true".equals( Config.getDiffPrimaryKeyAllColumnsIfMissing() ) )
+		{
+			cols = table.getColumnsNoPK();
+		}
+		for( DBColumn c: cols )
+		{
+			pkl.add( ( String )c.get( DBColumn.NAME ) );
+		}
+		return pkl;
+	}
+	
+	private static List<String> getNonPrimaryKeyFields(DBTable table) throws Exception 
+	{
+		List<String> pkl = new ArrayList<String>();
+		List<DBColumn> cols = table.getColumnsNoPK();
+		for( DBColumn c: cols )
+		{
+			pkl.add( ( String )c.get( DBColumn.NAME ) );
+		}
+		return pkl;
+	}
+
 	private void checkDestinationDb()
 		throws Exception
 	{
@@ -440,7 +620,7 @@ public class Diff extends Connector implements ConfigurationProperties
 		}
 		else 
 		{
-			throw new Exception( "Destination DB table count lesser than source and not empty!!!!" );
+			throw new Exception( "Destination DB table count less than source and not empty!!!!" );
 		}
 		checkDiffColumns();
 	}
@@ -451,14 +631,20 @@ public class Diff extends Connector implements ConfigurationProperties
 		List<TableDefinition> tableList = CON_SRC.getTableList();
 		for( TableDefinition table: tableList )
 		{
-			System.out.println( "Testing table: <" + table.originalName + ">" );
+			if( Config.debug() )
+			{
+				System.out.println( "Testing table: <" + table.originalName + ">" );
+			}
 			List<ColumnDefinition> cols = CON_DEST.getColumnList( table );
 			boolean modifiedStamp = false;
 			boolean modifiedAction = false;
 			boolean modifiedComment = false;
 			for( ColumnDefinition col: cols )
 			{
-				System.out.println( "Testing col: <" + col.name + ">" );
+				if( Config.debug() )
+				{
+					System.out.println( "Testing col: <" + col.name + ">" );
+				}
 				if( !modifiedAction && COLUMN_MODIFIED_ACTION.equals( col.name.saneName ) )
 				{
 					modifiedAction = true;

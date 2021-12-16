@@ -27,7 +27,7 @@ public class ModelProvider extends Connector
 	protected Connection connection;
 	protected DatabaseMetaData metadata;
 	protected String catalog;
-	protected String schema;
+//	protected String schema;
 	private static ModelProvider provider = null;
 	
 	private final Map<String,DBTable> TABLE_CACHE = new HashMap<String,DBTable>();
@@ -44,7 +44,7 @@ public class ModelProvider extends Connector
 		this.connection = connection;
 		metadata = connection.getMetaData();
 		catalog = getCatalog( metadata.getURL() );
-		schema = getSchema( metadata.getURL() );
+//	schema = getSchema( metadata.getURL() );
 	}
 	
 	public static ModelProvider getProvider( Connection connection )
@@ -85,7 +85,7 @@ public class ModelProvider extends Connector
 		if( TABLE_CACHE.isEmpty() )
 		{
 			List<DBTable> tables = new LinkedList<DBTable>();
-			ResultSet rs = metadata.getTables( catalog, schema, null, new String[] { "TABLE" } );
+			ResultSet rs = metadata.getTables( catalog, connection.getSchema(), null, new String[] { "TABLE" } );
 			while( rs.next() )
 			{
 				DBTable dbt = new DBTable( this );
@@ -109,7 +109,7 @@ public class ModelProvider extends Connector
 		{
 			
 			COLUMN_BY_NAME_CACHE.put( tableName, new HashMap<String,DBColumn>() );
-			ResultSet rs = metadata.getColumns( catalog, schema, (String) table.get( DBTable.NAME ), null );
+			ResultSet rs = metadata.getColumns( catalog, connection.getSchema(), (String) table.get( DBTable.NAME ), null );
 			List<DBColumn> columns = new ArrayList<DBColumn>();
 			while( rs.next() )
 			{
@@ -144,7 +144,7 @@ public class ModelProvider extends Connector
 		String tableName = ( String ) table.get( DBTable.NAME );
 		if(!PRIMARY_KEY_CACHE.containsKey( tableName ) )
 		{
-			ResultSet rs = metadata.getPrimaryKeys( null, schema, ( String ) table.get( DBTable.NAME ) );
+			ResultSet rs = metadata.getPrimaryKeys( null, connection.getSchema(), ( String ) table.get( DBTable.NAME ) );
 			List<int[]> seqs = new ArrayList<int[]>();
 			List<String> names = new ArrayList<String>();
 			for( int n = 0; rs.next(); n++ )
@@ -276,7 +276,7 @@ public class ModelProvider extends Connector
 		String tableName = ( String )table.get( DBTable.NAME );
 		if( !EXPORTED_KEY_CACHE.containsKey( tableName ) )
 		{
-			ResultSet rs = metadata.getExportedKeys( catalog, schema, tableName );
+			ResultSet rs = metadata.getExportedKeys( catalog, connection.getSchema(), tableName );
 			
 			EXPORTED_KEY_CACHE.put( tableName, readForeignKeys( rs ) );
 		}
@@ -290,7 +290,7 @@ public class ModelProvider extends Connector
 		if( !IMPORTED_KEY_CACHE.containsKey( tableName ) )
 		{
 			System.out.println( "GetImportedKeysForTable <" + tableName + ">" );
-			ResultSet rs = metadata.getImportedKeys( catalog, schema, ( String )table.get( DBTable.NAME ) );
+			ResultSet rs = metadata.getImportedKeys( catalog, connection.getSchema(), ( String )table.get( DBTable.NAME ) );
 			
 			IMPORTED_KEY_CACHE.put( tableName, readForeignKeys( rs ) );
 		}

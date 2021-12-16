@@ -20,13 +20,13 @@ import pt.evolute.utils.string.StringPlainer;
  */
 public class Connector
 {
-	private static final String MYSQL = "mysql";
+//	private static final String MYSQL = "mysql";
 	
 	private static final Map<String,String> SCHEMAS = new HashMap<String,String>();
 	
 	static
 	{
-		SCHEMAS.put( "postgresql", "public" );
+//		SCHEMAS.put( "postgresql", "public" );
 		SCHEMAS.put( "informix-sqli", "informix" );
 		SCHEMAS.put( "hsqldb", "PUBLIC" );
 		SCHEMAS.put( "sqlserver", "dbo" );
@@ -54,27 +54,27 @@ public class Connector
 		return con;
 	}
 	
-	public static String getSchema( String url )
-	{
-		/*StringTokenizer st = new StringTokenizer( url, ":", false );
-		st.nextToken();*/
-		String db = url.split( ":" )[ 1 ];
-		String result = null;
-		if( SCHEMAS.containsKey( db ) )
-		{
-			result = SCHEMAS.get( db );
-		}
-		else
-		{
-			if( MYSQL.equals( db ) )
-			{
-//				String dbNameAndProps = url.split( "/" )[ 3 ];
-//				result = dbNameAndProps.split( "[?]" )[ 0 ];
-				result = null;
-			}
-		}
-		return result;
-	}
+//	public static String getSchema( String url )
+//	{
+//		/*StringTokenizer st = new StringTokenizer( url, ":", false );
+//		st.nextToken();*/
+//		String db = url.split( ":" )[ 1 ];
+//		String result = null;
+//		if( SCHEMAS.containsKey( db ) )
+//		{
+//			result = SCHEMAS.get( db );
+//		}
+//		else
+//		{
+//			if( MYSQL.equals( db ) )
+//			{
+////				String dbNameAndProps = url.split( "/" )[ 3 ];
+////				result = dbNameAndProps.split( "[?]" )[ 0 ];
+//				result = null;
+//			}
+//		}
+//		return result;
+//	}
 	
 	public static String getCatalog( String url )
 	{

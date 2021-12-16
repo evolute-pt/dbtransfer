@@ -1,10 +1,11 @@
 package pt.evolute.utils.dbmodel;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import pt.evolute.dbtransfer.Config;
 import pt.evolute.utils.object.DefaultLightPropertyObject;
@@ -39,7 +40,7 @@ public class DBTable extends DefaultLightPropertyObject
 	{
 		if( importedReferences == null )
 		{
-			importedReferences = provider.getImportedKeysForTable( this );
+			importedReferences = Collections.unmodifiableList( provider.getImportedKeysForTable( this ) );
 		}
 		return importedReferences;
 	}
@@ -49,7 +50,7 @@ public class DBTable extends DefaultLightPropertyObject
 	{
 		if( exportedReferences == null )
 		{
-			exportedReferences = provider.getExportedKeysForTable( this );
+			exportedReferences = Collections.unmodifiableList( provider.getExportedKeysForTable( this ) );
 		}
 		return exportedReferences;
 	}
@@ -59,7 +60,7 @@ public class DBTable extends DefaultLightPropertyObject
 	{
 		if( primaryKey == null )
 		{
-			primaryKey = provider.getPrimaryKeyForTable( this );
+			primaryKey = Collections.unmodifiableList( provider.getPrimaryKeyForTable( this ) );
 		}
 		return primaryKey;
 	}
@@ -75,7 +76,7 @@ public class DBTable extends DefaultLightPropertyObject
 	{
 		if( hierarchys == null )
 		{
-			hierarchys = provider.getHierarchysForTable( this );
+			hierarchys = Collections.unmodifiableList( provider.getHierarchysForTable( this ) );
 		}
 		return hierarchys;
 	}
@@ -85,7 +86,7 @@ public class DBTable extends DefaultLightPropertyObject
 	{
 		if( columns == null )
 		{
-			columns = provider.getColumnsForTable( this );
+			columns = Collections.unmodifiableList( provider.getColumnsForTable( this ) );
 		}
 		return columns;
 	}
@@ -121,7 +122,7 @@ public class DBTable extends DefaultLightPropertyObject
 		if( components == null )
 		{
 			getHierarchys();
-			components = new Vector<DBTable>();
+			components = new ArrayList<DBTable>();
 			for( DBHierarchy hierarchy: hierarchys )
 			{
 				DBTable table = hierarchy.getTables()[ 1 ];
@@ -130,6 +131,7 @@ public class DBTable extends DefaultLightPropertyObject
 					components.add( table );
 				}
 			}
+			components = Collections.unmodifiableList( components );
 		}
 		return components;
 	}
@@ -150,6 +152,11 @@ public class DBTable extends DefaultLightPropertyObject
 	public String toString()
 	{
 		return ( String ) get( NAME );
+	}
+	
+	public String getSaneName()
+	{
+		return ( ( String ) get( NAME ) ).toLowerCase();
 	}
 	
 	public String getDestinationName()

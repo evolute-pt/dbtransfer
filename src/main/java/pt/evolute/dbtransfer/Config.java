@@ -84,6 +84,16 @@ public class Config implements ConfigurationProperties{
 		return PROPS.getProperty( DIFF_IGNORE_DESTINATION_TABLE_COUNT, "false" );
 	}
 	
+	public static String getDiffIgnoreTablesWithoutPrimaryKey()
+	{
+		return PROPS.getProperty( DIFF_IGNORE_TABLES_WITHOUT_PRIMARY_KEY, "false" );
+	}
+	
+	public static String getDiffPrimaryKeyAllColumnsIfMissing()
+	{
+		return PROPS.getProperty( DIFF_PRIMARY_KEY_ALL_COLUMNS_IF_MISSING, "true" );
+	}
+	
 	public static String getDiffUseMD5()
 	{
 		return PROPS.getProperty( DIFF_USE_MD5, "true" );

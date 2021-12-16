@@ -41,7 +41,6 @@ public class JDBCConnection implements DBConnection
     private final String dbUrl;
     private final String dbUser;
     private final String dbPasswd;
-    private final String dbSchema;
 
     private Connection connection;
 
@@ -54,7 +53,7 @@ public class JDBCConnection implements DBConnection
     
     private final Helper helper;
 
-    public JDBCConnection( String url, String user, String pass, boolean onlyNotEmpty, String schema )
+    public JDBCConnection( String url, String user, String pass, boolean onlyNotEmpty )
                     throws Exception
     {
             dbUrl = url;
@@ -62,19 +61,19 @@ public class JDBCConnection implements DBConnection
             dbPasswd= pass;
             testInitConnection();
             catalog = connection.getCatalog();
-            if( schema == null )
-            {
-                dbSchema = Connector.getSchema( url );
-            }
-            else
-            {
-                dbSchema = schema;
-            }
+//            if( schema == null )
+//            {
+//                dbSchema = Connector.getSchema( url );
+//            }
+//            else
+//            {
+//                dbSchema = schema;
+//            }
 
             ignoreEmpty = onlyNotEmpty;
             helper = HelperManager.getTranslator( url );
             helper.initConnection( this );
-            System.out.println( "JDBC: " + url + " catalog: " + catalog + " schema: " + dbSchema );
+            System.out.println( "JDBC: " + url + " catalog: " + catalog );
     }
 
     private void testInitConnection()
@@ -128,7 +127,7 @@ public class JDBCConnection implements DBConnection
     	if( LIST_TABLES.isEmpty() )
     	{
 	        DatabaseMetaData rsmd = connection.getMetaData();
-	        ResultSet rs = rsmd.getTables( catalog, dbSchema, null, new String[] { "TABLE" } );
+	        ResultSet rs = rsmd.getTables( catalog, connection.getSchema(), null, new String[] { "TABLE" } );
 	        while( rs.next() )
 	        {
 	            String table = rs.getString( 3 );
@@ -169,7 +168,7 @@ public class JDBCConnection implements DBConnection
         {
             testInitConnection();
             DatabaseMetaData rsmd = connection.getMetaData();
-            ResultSet rs = rsmd.getColumns( catalog, dbSchema, table.saneName, null );
+            ResultSet rs = rsmd.getColumns( catalog, connection.getSchema(), table.saneName, null );
             list = new LinkedList<ColumnDefinition>();
             Map<String,ColumnDefinition> cols = new HashMap<String, ColumnDefinition>();
             if( debug )
@@ -249,7 +248,7 @@ public class JDBCConnection implements DBConnection
         }
         catch( Exception ex )
         {
-        	System.out.println( "<" + sql + ">"  );
+        	System.out.println( ex.getMessage() + "<" + sql + ">"  );
         	throw ex;
         }
         return ret;
@@ -260,12 +259,12 @@ public class JDBCConnection implements DBConnection
         PrimaryKeyDefinition pk = new PrimaryKeyDefinition();
         pk.name = table + "_pk";
         DatabaseMetaData rsmd = connection.getMetaData();
-        ResultSet rs = rsmd.getPrimaryKeys( catalog, dbSchema, helper.outputName( table.originalName ) );
+        ResultSet rs = rsmd.getPrimaryKeys( catalog, connection.getSchema(), helper.outputName( table.originalName ) );
         while( rs.next() )
         {
             ColumnDefinition col = new ColumnDefinition();
             col.name = new Name( rs.getString( 4 ) );
-            ResultSet rsC = rsmd.getColumns( catalog, dbSchema, helper.outputName( table.originalName ), col.name.originalName );
+            ResultSet rsC = rsmd.getColumns( catalog, connection.getSchema(), helper.outputName( table.originalName ), col.name.originalName );
             rsC.next();
             col.sqlTypeName = rsC.getString( 6 );
             if( rsC.getInt( 5 ) == Types.CHAR
@@ -289,8 +288,8 @@ public class JDBCConnection implements DBConnection
     public List<ForeignKeyDefinition> getForeignKeyList(TableDefinition table) throws Exception
     {
         DatabaseMetaData rsmd = connection.getMetaData();
-        System.out.println( "getting FKs: " + connection.getCatalog() + "/" + dbSchema + "/" + table.originalName + "/" );
-        ResultSet rs = rsmd.getImportedKeys( catalog, dbSchema, helper.outputName( table.originalName ) );
+        System.out.println( "getting FKs: " + connection.getCatalog() + "/" + connection.getSchema() + "/" + table.originalName + "/" );
+        ResultSet rs = rsmd.getImportedKeys( catalog, connection.getSchema(), helper.outputName( table.originalName ) );
         List<ForeignKeyDefinition> list = new LinkedList<ForeignKeyDefinition>();
         Map<String,ForeignKeyDefinition> fks = new HashMap<String, ForeignKeyDefinition>();
         while( rs.next() )
@@ -308,7 +307,7 @@ public class JDBCConnection implements DBConnection
             col.referencedColumn = new ColumnDefinition();
             col.referencedColumn.name = new Name( rs.getString( 4 ) );
             col.name = new Name( rs.getString( 8 ) );
-            ResultSet rsC = rsmd.getColumns( catalog, dbSchema, helper.outputName( table.originalName ), col.name.originalName );
+            ResultSet rsC = rsmd.getColumns( catalog, connection.getSchema(), helper.outputName( table.originalName ), col.name.originalName );
             if( rsC.next() )
             {
                 col.sqlTypeName = rsC.getString( 6 );
@@ -371,7 +370,7 @@ public class JDBCConnection implements DBConnection
             throws Exception
     {
         DatabaseMetaData rsmd = connection.getMetaData();
-        ResultSet rs = rsmd.getIndexInfo( catalog, dbSchema, helper.outputName( table.originalName ), true, false );
+        ResultSet rs = rsmd.getIndexInfo( catalog, connection.getSchema(), helper.outputName( table.originalName ), true, false );
         List<UniqueDefinition> list = new LinkedList<UniqueDefinition>();
         UniqueDefinition lastUniq = null;
         while( rs.next() )
@@ -426,8 +425,8 @@ public class JDBCConnection implements DBConnection
         return helper;
     }
     
-    public String getSchema()
+    public String getSchema() throws SQLException
     {
-        return dbSchema;
+        return connection.getSchema();
     }
 }
