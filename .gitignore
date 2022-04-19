@@ -3,3 +3,4 @@ dbtransfer.iml
 build/
 tmp/
 target/
+/.settings/
