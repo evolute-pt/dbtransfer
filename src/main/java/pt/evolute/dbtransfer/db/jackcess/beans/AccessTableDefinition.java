@@ -192,7 +192,7 @@ public class AccessTableDefinition
 	}
 
 	private void fillSQLType( ColumnDefinition myCol, Column col )
-			throws SQLException
+			throws SQLException, IOException
 	{
 		String name = col.getType().name();
 		int type = col.getSQLType();
