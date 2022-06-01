@@ -136,46 +136,40 @@ public class Diff extends Connector implements ConfigurationProperties
 	
 	private List<TableDefinition> reorder(List<TableDefinition> inputList) throws Exception 
     {
-        Map<TableDefinition,TableDefinition> noDepsTablesMap = new HashMap<TableDefinition,TableDefinition>();
-        List<TableDefinition> deps = new ArrayList<TableDefinition>();
-        List<TableDefinition> list = new ArrayList<TableDefinition>();
-        while( !inputList.isEmpty() || !deps.isEmpty() )
-        {
-            if( !deps.isEmpty() )
-            {
-                inputList.addAll( deps );
-            }
-            for( TableDefinition n: inputList )
-            {
-                if( JDBCConnection.debug )
+		List<TableDefinition> tables = new ArrayList<TableDefinition>();
+		
+		while( !inputList.isEmpty() )
+		{
+			 for( TableDefinition n: inputList )
+	         {
+				if( JDBCConnection.debug )
                 {
                     System.out.println( "Testing: " + n.originalName );
                 }
-                List<ForeignKeyDefinition> fks = CON_DEST.getForeignKeyList( n );
+				List<ForeignKeyDefinition> fks = CON_DEST.getForeignKeyList( n );
                 boolean ok = true;
                 for( ForeignKeyDefinition fk: fks )
                 {
-                    if( !noDepsTablesMap.containsKey( fk.columns.get( 0 ).referencedTable ) )
+                    if( !tables.contains( fk.columns.get( 0 ).referencedTable ) )
                     {
                         if( JDBCConnection.debug )
                         {
-                            System.out.println( "Depends: " + fk.columns.get( 0 ).referencedTable.originalName );
+                            System.out.println( "Depends failed for: " + fk.columns.get( 0 ).referencedTable.originalName );
                         }
-                        deps.add( n );
                         ok = false;
                         break;
                     }
                 }
                 if( ok )
                 {
-                    list.add( n );
-                    noDepsTablesMap.put( n, n );
+                    tables.add( n );
                 }
-            }
-            inputList.clear();
-        }
-        System.out.println( "Reordered (" + list.size() + " tables)" );
-        return list;
+	         }
+			 inputList.removeAll( tables );
+		}
+		System.out.println( "Reordered (" + tables.size() + " tables)" );
+        
+		return tables;
     }
 	
 	private void diffTable( DBTable table )
