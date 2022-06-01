@@ -17,8 +17,10 @@ import pt.evolute.dbtransfer.db.DBConnector;
 import pt.evolute.dbtransfer.db.PrimaryKeyValue;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ConnectionDefinitionBean;
+import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
 import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.helper.HelperManager;
+import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
 import pt.evolute.dbtransfer.transfer.Mover;
 import pt.evolute.utils.arrays.Virtual2DArray;
 import pt.evolute.utils.arrays.exception.EndOfArrayException;
@@ -80,6 +82,7 @@ public class Diff extends Connector implements ConfigurationProperties
 		System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memory" );
 	
 		List<TableDefinition> v = CON_SRC.getTableList();
+		v = reorder( v );
 		TABLES = v.toArray( new TableDefinition[ v.size() ] );
 	}
 	
@@ -130,6 +133,50 @@ public class Diff extends Connector implements ConfigurationProperties
 			}
 		}
 	}
+	
+	private List<TableDefinition> reorder(List<TableDefinition> inputList) throws Exception 
+    {
+        Map<TableDefinition,TableDefinition> noDepsTablesMap = new HashMap<TableDefinition,TableDefinition>();
+        List<TableDefinition> deps = new ArrayList<TableDefinition>();
+        List<TableDefinition> list = new ArrayList<TableDefinition>();
+        while( !inputList.isEmpty() || !deps.isEmpty() )
+        {
+            if( !deps.isEmpty() )
+            {
+                inputList.addAll( deps );
+            }
+            for( TableDefinition n: inputList )
+            {
+                if( JDBCConnection.debug )
+                {
+                    System.out.println( "Testing: " + n.originalName );
+                }
+                List<ForeignKeyDefinition> fks = CON_DEST.getForeignKeyList( n );
+                boolean ok = true;
+                for( ForeignKeyDefinition fk: fks )
+                {
+                    if( !noDepsTablesMap.containsKey( fk.columns.get( 0 ).referencedTable ) )
+                    {
+                        if( JDBCConnection.debug )
+                        {
+                            System.out.println( "Depends: " + fk.columns.get( 0 ).referencedTable.originalName );
+                        }
+                        deps.add( n );
+                        ok = false;
+                        break;
+                    }
+                }
+                if( ok )
+                {
+                    list.add( n );
+                    noDepsTablesMap.put( n, n );
+                }
+            }
+            inputList.clear();
+        }
+        System.out.println( "Reordered (" + list.size() + " tables)" );
+        return list;
+    }
 	
 	private void diffTable( DBTable table )
 		throws Exception
