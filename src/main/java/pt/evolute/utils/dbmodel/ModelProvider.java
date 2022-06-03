@@ -13,6 +13,7 @@ import java.util.Map;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import pt.evolute.dbtransfer.db.jdbc.JDBCConnection;
 import pt.evolute.utils.db.ColumnMetadataConstants;
 import pt.evolute.utils.db.Connector;
 import pt.evolute.utils.db.ForeignKeyMetadataConstants;
@@ -301,53 +302,97 @@ public class ModelProvider extends Connector
 		throws Exception
 	{
 		getTables();
-		Map<DBTable,DBTable> done = new HashMap<DBTable,DBTable>();
+		
 		List<DBTable> ordered = new ArrayList<DBTable>();
-		Map<String,DBTable> cacheClone = new HashMap<String,DBTable>();
-		cacheClone.putAll( TABLE_CACHE );
-		int lastSize = -1;
-		while( !cacheClone.isEmpty() )
+		List<DBTable> tables = new ArrayList<DBTable>();
+		tables.addAll( TABLE_CACHE.values() );
+		
+		while( !tables.isEmpty() )
 		{
-			String keys[] = cacheClone.keySet().toArray( new String[ cacheClone.size() ] );
-			if( lastSize == cacheClone.size() )
-			{
-				System.out.println( "Unorderable tables:" );
-				for( int k = 0; k < keys.length; k++ )
-				{
-					DBTable table = cacheClone.get( keys[ k ] );
-					System.out.println( "\t" + table.get( DBTable.NAME ) );
-				}
-				break;
-			}
-			lastSize = cacheClone.size();
-			
-//System.out.println( "Unclean: " + cacheClone.size() );
-			for( int k = 0; k < keys.length; k++ )
-			{
-				DBTable table = cacheClone.get( keys[ k ] );
-				List<DBReference> references = table.getImportedForeignKeys();
-				boolean clean = true;
-				if( !references.isEmpty() )
-				{
-					for( int r = 0; r < references.size(); r++ )
-					{
-						DBTable dest = ( DBTable ) references.get( r ).get( DBReference.DEST_TABLE );
-						if( !done.containsKey( dest ) && !dest.equals( table ) )
-						{
-							clean = false;
-							break;
-						}
-					}
-				}
-				if( clean )
-				{
-
-					cacheClone.remove( keys[ k ] );
-					ordered.add( table );
-					done.put( table, table );
-				}
-			}
+			int noDeps = 0;
+			 for( DBTable n: tables )
+	         {
+				if( JDBCConnection.debug )
+                {
+                    System.out.println( "Testing: " + n.getSaneName() );
+                }
+				List<DBReference> fks = n.getImportedForeignKeys();
+                boolean ok = true;
+                for( DBReference fk: fks )
+                {
+                	System.out.println( "FK: " + fk.get( DBReference.NAME ) );
+                    if( !ordered.contains( fk.get( DBReference.DEST_TABLE ) ) )
+                    {
+                        if( JDBCConnection.debug )
+                        {
+                            System.out.println( "Depends failed for: " + ((DBTable)fk.get( DBReference.DEST_TABLE )).getSaneName() );
+                        }
+                        ok = false;
+                        break;
+                    }
+                }
+                if( ok )
+                {
+                	ordered.add( n );
+                    ++noDeps;
+                    if( JDBCConnection.debug )
+                    {
+                        System.out.println( "No deps added: " + n );
+                    }
+                }
+	         }
+			 System.out.println( "No deps: " + noDeps );
+			 tables.removeAll( ordered );
+			 System.out.println( "Still: " + tables.size() + " to go!\n\n" );
 		}
+		System.out.println( "Reordered (" + ordered.size() + " tables)\nOrder:" );
+		
+//		Map<DBTable,DBTable> done = new HashMap<DBTable,DBTable>();
+//		List<DBTable> ordered = new ArrayList<DBTable>();
+//		Map<String,DBTable> cacheClone = new HashMap<String,DBTable>();
+//		cacheClone.putAll( TABLE_CACHE );
+//		int lastSize = -1;
+//		while( !cacheClone.isEmpty() )
+//		{
+//			String keys[] = cacheClone.keySet().toArray( new String[ cacheClone.size() ] );
+//			if( lastSize == cacheClone.size() )
+//			{
+//				System.out.println( "Unorderable tables:" );
+//				for( int k = 0; k < keys.length; k++ )
+//				{
+//					DBTable table = cacheClone.get( keys[ k ] );
+//					System.out.println( "\t" + table.get( DBTable.NAME ) );
+//				}
+//				break;
+//			}
+//			lastSize = cacheClone.size();
+//			
+//			for( int k = 0; k < keys.length; k++ )
+//			{
+//				DBTable table = cacheClone.get( keys[ k ] );
+//				List<DBReference> references = table.getImportedForeignKeys();
+//				boolean clean = true;
+//				if( !references.isEmpty() )
+//				{
+//					for( int r = 0; r < references.size(); r++ )
+//					{
+//						DBTable dest = ( DBTable ) references.get( r ).get( DBReference.DEST_TABLE );
+//						if( !done.containsKey( dest ) && !dest.equals( table ) )
+//						{
+//							clean = false;
+//							break;
+//						}
+//					}
+//				}
+//				if( clean )
+//				{
+//
+//					cacheClone.remove( keys[ k ] );
+//					ordered.add( table );
+//					done.put( table, table );
+//				}
+//			}
+//		}
 		System.out.println( "Tables ordered: " + ordered );
 		return ordered;
 	}

@@ -163,5 +163,24 @@ public class DBTable extends DefaultLightPropertyObject
 	{
 		return Config.getDestinationTablePrefix() + toString();
 	}
+	
+	@Override
+    public boolean equals( Object o )
+    {
+    	boolean eq = o instanceof DBTable;
+    	if( eq )
+    	{
+    		eq = toString().equals( ((DBTable)o).toString() );
+    	}
+        return eq;
+    }
+
+    @Override
+    public int hashCode() 
+    {
+        int hash = 3;
+        hash = 53 * ( hash + (this.toString() != null ? this.toString().hashCode() : 0) );
+        return hash;
+    }
 }
 

@@ -140,6 +140,7 @@ public class Diff extends Connector implements ConfigurationProperties
 		
 		while( !inputList.isEmpty() )
 		{
+			int noDeps = 0;
 			 for( TableDefinition n: inputList )
 	         {
 				if( JDBCConnection.debug )
@@ -163,12 +164,24 @@ public class Diff extends Connector implements ConfigurationProperties
                 if( ok )
                 {
                     tables.add( n );
+                    ++noDeps;
+                    if( JDBCConnection.debug )
+                    {
+                        System.out.println( "No deps added: " + n );
+                    }
                 }
 	         }
+			 System.out.println( "No deps: " + noDeps );
 			 inputList.removeAll( tables );
+			 System.out.println( "Still: " + inputList.size() + " to go!\n\n" );
 		}
-		System.out.println( "Reordered (" + tables.size() + " tables)" );
+		System.out.println( "Reordered (" + tables.size() + " tables)\nOrder:" );
         
+		for( TableDefinition td: tables )
+		{
+			System.out.println( td.originalName );
+		}
+		System.out.println( "\nDONE Reordering\n" );
 		return tables;
     }
 	
@@ -643,6 +656,7 @@ public class Diff extends Connector implements ConfigurationProperties
 	private void checkDestinationDb()
 		throws Exception
 	{
+		System.out.println( "Checking destination DB" );
 		List<TableDefinition> v = CON_DEST.getTableList();
 		if( v.isEmpty() && TABLES.length > 0 )
 		{
@@ -669,6 +683,7 @@ public class Diff extends Connector implements ConfigurationProperties
 	private void checkDiffColumns()
 		throws Exception
 	{
+		System.out.println( "Checking diff columns" );
 		List<TableDefinition> tableList = CON_SRC.getTableList();
 		for( TableDefinition table: tableList )
 		{
