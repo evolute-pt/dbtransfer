@@ -16,8 +16,8 @@ import com.healthmarketscience.jackcess.Index;
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.beans.ColumnDefinition;
 import pt.evolute.dbtransfer.db.beans.ForeignKeyDefinition;
-import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.beans.PrimaryKeyDefinition;
+import pt.evolute.dbtransfer.db.beans.TableDefinition;
 import pt.evolute.dbtransfer.db.beans.UniqueDefinition;
 import pt.evolute.dbtransfer.db.helper.Helper;
 import pt.evolute.dbtransfer.db.jackcess.beans.AccessTableDefinition;
@@ -128,4 +128,9 @@ public class JackcessConnection implements DBConnection {
     public Helper getHelper() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+	@Override
+	public void addColumnToTable(TableDefinition table, ColumnDefinition col) throws Exception {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 }

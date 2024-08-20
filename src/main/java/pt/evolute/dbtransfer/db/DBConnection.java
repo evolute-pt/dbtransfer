@@ -20,7 +20,7 @@ public interface DBConnection
 {
 	public List<TableDefinition> getTableList()
 			throws Exception;
-
+	
 	public List<ColumnDefinition> getColumnList(TableDefinition table)
 			throws Exception;
 
@@ -49,4 +49,6 @@ public interface DBConnection
 			throws Exception;
         
         public Helper getHelper();
+
+		public void addColumnToTable(TableDefinition table, ColumnDefinition col) throws Exception;
 }

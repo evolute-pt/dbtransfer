@@ -1205,4 +1205,9 @@ public class DummyConnection implements DBConnection {
 			}
 		};
     }
+
+	@Override
+	public void addColumnToTable(TableDefinition table, ColumnDefinition col) throws Exception {
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 }

@@ -30,6 +30,8 @@ import pt.evolute.utils.string.UnicodeChecker;
  */
 public class Mover extends Connector implements ConfigurationProperties
 {
+//	private static final int MULTI_ROW_INSERT = 1000;
+	
 	public final long MAX_READ_ROWS;
 	public final boolean IGNORE_BLOB;
 	
@@ -171,14 +173,16 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
     public void moveDB()
             throws Exception
     {
-        System.out.println( "Moving (" + TABLES.length + " tables)" );
+        System.out.println( "Moving " + TABLES.length + " tables" );
         final List<Object> TEMP = new LinkedList<Object>();
         List<AsyncStatement> threads = new LinkedList<AsyncStatement>();
         Helper tr = HelperManager.getTranslator( DST.getUrl() );
         
         ReportThread rt = new ReportThread( this, AsyncStatement.getRunningThreads() );
         rt.start();
-        
+
+//        StringBuilder sql = new StringBuilder();
+//        int multi = 0;
         for( int i = 0; i < TABLES.length; ++i )
         {
             Virtual2DArray rs = CON_SRC.getFullTable( TABLES[ i ] );
@@ -190,7 +194,7 @@ System.out.println( "Using max " + ( MAX_MEM / ( 1024 * 1024 ) ) + " MB of memor
             }
             if( hasData )
             {
-                StringBuilder buff = new StringBuilder( "INSERT INTO " );
+            	StringBuilder buff = new StringBuilder( "INSERT INTO " );
                 StringBuilder args = new StringBuilder();
                 buff.append( TABLES[ i ].saneName );
                 buff.append( " ( " );
@@ -307,6 +311,13 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                     }
                 }
             }
+//            if( multiRow % MULTI_ROW_INSERT )
+//            {
+//            	multiRow = 0;
+//            	// insert
+//            	// clear
+//            	sql = new StringBuilder();
+//            }
         }
         rt.stopReporting();
         for( AsyncStatement async: threads )

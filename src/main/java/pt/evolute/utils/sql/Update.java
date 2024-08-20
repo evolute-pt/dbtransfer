@@ -101,7 +101,7 @@ public class Update implements UpdateQuery
 			{
 				statement.append( "WHERE " );
 				statement.append( wClause );
-				statement.append( " " );
+				statement.append( ";" );
 			}
 		}
 		return toUnicode( getBackend().portSyntax( statement ) ).toString();

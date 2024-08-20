@@ -160,6 +160,8 @@ public class JDBCConnection implements DBConnection
     	}
 	    return LIST_TABLES;
     }
+    
+    
 
     public List<ColumnDefinition> getColumnList( TableDefinition table ) throws Exception
     {
@@ -253,7 +255,7 @@ public class JDBCConnection implements DBConnection
         }
         return ret;
     }
-
+    
     public PrimaryKeyDefinition getPrimaryKey( TableDefinition table) throws Exception
     {
         PrimaryKeyDefinition pk = new PrimaryKeyDefinition();
@@ -429,4 +431,9 @@ public class JDBCConnection implements DBConnection
     {
         return connection.getSchema();
     }
+
+	@Override
+	public void addColumnToTable(TableDefinition table, ColumnDefinition col) throws Exception {
+		executeQuery( "ALTER TABLE " + table.originalName + " ADD COLUMN " + col.name.saneName + " " + col.sqlTypeName + ( col.isNotNull? " NOT NULL": "" ) );
+	}
 }
