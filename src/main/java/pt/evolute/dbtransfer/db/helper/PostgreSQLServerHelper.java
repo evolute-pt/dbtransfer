@@ -9,6 +9,7 @@ import java.util.Map;
 
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.utils.arrays.Virtual2DArray;
+import pt.evolute.utils.db.DBConstants;
 import pt.evolute.utils.string.UnicodeChecker;
 
 public class PostgreSQLServerHelper extends NullHelper
@@ -306,5 +307,10 @@ public class PostgreSQLServerHelper extends NullHelper
     @Override
 	public String getDropTable(String table) {
 		return "DROP TABLE " + table + " CASCADE";
+	}
+	
+    @Override
+	public String getType() {
+		return DBConstants.DB_POSTGRESQL;
 	}
 }

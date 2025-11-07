@@ -58,4 +58,6 @@ public interface Helper
     public String getRollback();
 
 	public String getCreateTablePrefix();
+	
+	public String getType();
 }

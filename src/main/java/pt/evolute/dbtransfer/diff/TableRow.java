@@ -7,7 +7,11 @@ import pt.evolute.dbtransfer.db.PrimaryKeyValue;
 
 public class TableRow 
 {
-	public String status = null;
+	private static final String STATUS_INSERTED = "i";
+	private static final String STATUS_UPDATED = "u";
+	private static final String STATUS_DELETED = "d";
+	
+	private String status = null;
 	private String rowMd5 = null;
 	public final List<Object> row = new ArrayList<Object>();
 
@@ -48,5 +52,22 @@ public class TableRow
 			updateMd5();
 		}
 		return rowMd5;
+	}
+	
+	public boolean isDeleted()
+	{
+		return STATUS_DELETED.equals( status );
+	}
+	
+	public void setStatus( String s )
+		throws Exception
+	{
+		if( !STATUS_INSERTED.equals( s )
+				&& !STATUS_UPDATED.equals( s )
+				&& !STATUS_DELETED.equals( s ))
+		{
+			throw new Exception( "Invalid status for row: " + s );
+		}
+		status = s;
 	}
 }

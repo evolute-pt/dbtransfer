@@ -5,6 +5,7 @@ import java.util.Map;
 
 import pt.evolute.dbtransfer.db.DBConnection;
 import pt.evolute.dbtransfer.db.beans.Name;
+import pt.evolute.utils.db.DBConstants;
 
 public class HsqlDBServerHelper extends NullHelper
 {
@@ -161,4 +162,9 @@ public class HsqlDBServerHelper extends NullHelper
     {
         return !name.saneName.contains( "==" );
     }
+    
+	@Override
+	public String getType() {
+		return DBConstants.DB_HSQL;
+	}
 }

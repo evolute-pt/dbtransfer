@@ -257,7 +257,7 @@ System.out.println( "I: " + i + " " + TABLES[ i ].saneName + " sql: " + insert +
                         		&& typesCache[ j ] != Types.LONGVARBINARY 
                         		&& typesCache[ j ] != Types.VARBINARY ) )
                         {
-	                        	data = rs.get( row, j );
+	                        data = rs.get( row, j );
 	                        if( ESCAPE_UNICODE && data != null 
 	                                        && data instanceof String )
 	                        {

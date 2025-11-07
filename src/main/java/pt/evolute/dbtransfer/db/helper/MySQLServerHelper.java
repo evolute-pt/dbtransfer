@@ -6,8 +6,8 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 
-import pt.evolute.utils.arrays.Virtual2DArray;
 import pt.evolute.dbtransfer.db.DBConnection;
+import pt.evolute.utils.arrays.Virtual2DArray;
 
 public class MySQLServerHelper extends NullHelper
 {
@@ -274,4 +274,10 @@ public class MySQLServerHelper extends NullHelper
     {
         stm.setFetchSize(Integer.MIN_VALUE);
     }
+        
+	@Override
+	public String getType() {
+		return null;
+	}
+
 }

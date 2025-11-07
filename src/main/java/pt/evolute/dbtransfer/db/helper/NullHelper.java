@@ -224,4 +224,9 @@ public class NullHelper implements Helper
 	public String getCreateTablePrefix() {
 		return "";
 	}
+
+	@Override
+	public String getType() {
+		return null;
+	}
 }

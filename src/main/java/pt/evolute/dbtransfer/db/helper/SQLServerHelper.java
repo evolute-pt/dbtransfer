@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import pt.evolute.dbtransfer.db.DBConnection;
+import pt.evolute.utils.db.DBConstants;
 
 public class SQLServerHelper extends NullHelper
 {
@@ -269,5 +270,10 @@ public class SQLServerHelper extends NullHelper
 	@Override
 	public String getCreateTablePrefix() {
 		return "dbo.";
+	}
+	
+	@Override
+	public String getType() {
+		return DBConstants.DB_SQLSERVER;
 	}
 }

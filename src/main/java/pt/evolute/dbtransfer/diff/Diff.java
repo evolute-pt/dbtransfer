@@ -45,7 +45,7 @@ public class Diff extends Connector implements ConfigurationProperties
 	
 	private static final long MAX_MEM = Runtime.getRuntime().maxMemory();
 
-	public static final int MAX_LOAD_ROWS = 4096;
+	public static final int MAX_LOAD_ROWS = 50000;
 	
 	private final TableDefinition TABLES[];
 	private final ConnectionDefinitionBean SRC;
@@ -203,7 +203,7 @@ public class Diff extends Connector implements ConfigurationProperties
 		System.gc();
 		System.out.println( "Testing table: " + table.toString() + " freemem: " 
 					+ ( Runtime.getRuntime().freeMemory() / ( 1024 * 1024 ) ) );
-
+		
 		int i = 0;
 		int u = 0;
 		int d = 0;
@@ -223,17 +223,67 @@ public class Diff extends Connector implements ConfigurationProperties
 			// run src - find new and diff
 			if( Config.debug() )
 			{
-				System.out.println( "Checking new and updated rows (" + src.size() + " vs " + dest.size() + ")" );
+				System.out.println( "Checking new and updated rows (" + src.size() + " vs " + ( dest != null? dest.size(): -1) + ")" );
 			}
 
-			for( PrimaryKeyValue pk: src.keySet() )
+			for( PrimaryKeyValue pk: src.allKeysOrdered() )
 			{
-				if( dest == null || !dest.isPrimaryKeyValueInsidePage( pk ) )
+				System.out.println( "Source pkv: " + pk );
+				if( ( dest == null || !dest.isPrimaryKeyValueInsidePage( pk ) ) )
 				{
-					dest = loadTable( table, CON_DEST, true, destPage++, maxRowsPerPage );
-					destPageRowCount = dest.size();
+					if( dest != null )
+					{
+						// delete rest of rows on destination page
+						for( PrimaryKeyValue pkNotExist: dest.keySet() )
+						{
+							if( !dest.get( pkNotExist ).isDeleted() )
+							{
+								deleteRow( table, pkNotExist );
+								++d;
+//								if( ( d % 1000 ) == 0 )
+//								{
+//									System.out.println( "Deleted (1) " + d + " rows!" );
+//								}
+							}
+						}
+						dest = null;
+					}
+					// can I load more pages on destination?
+					if( destPageRowCount == maxRowsPerPage )
+					{
+//						System.out.println( "Loading next destination page: " + destPage );
+						while( true ) 
+						{
+							dest = loadTable( table, CON_DEST, true, destPage++, maxRowsPerPage );
+							destPageRowCount = dest.size();
+							if( destPageRowCount > 0 && !dest.isPrimaryKeyValueInsidePage( pk ) )
+							{
+								for( PrimaryKeyValue pkNotExist: dest.keySet() )
+								{
+									if( !dest.get( pkNotExist ).isDeleted() )
+									{
+										deleteRow( table, pkNotExist );
+										++d;
+//										if( ( d % 1000 ) == 0 )
+//										{
+//											System.out.println( "Deleted (2) " + d + " rows!" );
+//										}
+									}
+								}
+							}
+							else
+							{
+								// found the right page!
+								break;
+							}
+						}
+					}
+//					else
+//					{
+//						System.out.println( "No more destination pages! size=" + destPageRowCount );
+//					}
 				}
-				if( dest.containsKey( pk ) )
+				if( dest != null && dest.containsKey( pk ) )
 				{
 					if( !src.get( pk ).getMd5().equals( dest.get( pk ).getMd5() ) )
 					{
@@ -244,9 +294,11 @@ public class Diff extends Connector implements ConfigurationProperties
 						updateRow( table, pk, src.get( pk ) );
 						++u;
 					}
-					else if( "d".equals( dest.get( pk ).status ) )
+					else if( dest.get( pk ).isDeleted() )
 					{
+						// same row - but undeleted
 						updateAction( table, pk );
+						++u;
 					}
 					dest.remove( pk );
 				}
@@ -261,29 +313,39 @@ public class Diff extends Connector implements ConfigurationProperties
 			{
 				System.out.println( "Checking deleted rows" );
 			}
-			for( PrimaryKeyValue pk: dest.keySet() )
-			{
-				if( !src.containsKey( pk ) && !"d".equals( dest.get( pk ).status ) )
-				{
-					deleteRow( table, pk );
-					++d;
-				}
-			}
+//			for( PrimaryKeyValue pk: dest.keySet() )
+//			{
+//				if( !"d".equals( dest.get( pk ).status ) )
+//				{
+//					deleteRow( table, pk );
+//					++d;
+//				}
+//			}
 		}
-		while( srcPageRowCount == MAX_LOAD_ROWS );
-		while( destPageRowCount == MAX_LOAD_ROWS )
+		while( srcPageRowCount == maxRowsPerPage );
+		
+		if( dest != null )
 		{
-			dest = loadTable( table, CON_DEST, true, destPage++, maxRowsPerPage );
-			destPageRowCount = dest.size();
-			for( PrimaryKeyValue pk: dest.keySet() )
+			do
 			{
-				if( !"d".equals( dest.get( pk ).status ) )
+				for( PrimaryKeyValue pk: dest.keySet() )
 				{
-					deleteRow( table, pk );
-					++d;
+					if( !dest.get( pk ).isDeleted() )
+					{
+						deleteRow( table, pk );
+						++d;
+//						if( ( d % 1000 ) == 0 )
+//						{
+//							System.out.println( "Deleted (3) " + d + " rows!" );
+//						}
+					}
 				}
+				dest = loadTable( table, CON_DEST, true, destPage++, maxRowsPerPage );
+				destPageRowCount = dest.size();
 			}
+			while( destPageRowCount == maxRowsPerPage );
 		}
+		
 //		CON_DEST.executeQuery( "COMMIT;" );
 		commit();
 		System.out.println( "Changes i " + i + " u " + u + " d " + d );
@@ -442,12 +504,14 @@ public class Diff extends Connector implements ConfigurationProperties
 		Update update = new Update( table.toString(), assigns.toArray( new Assignment[ assigns.size() ] ), getPkExpression(table, pk) );
 		update.setBackend( BackendProvider.getBackend( DST.getUrl() ) );
 		
-		System.out.println( "U " + update );
+//		System.out.println( "U " + update );
 		try
 		{
 //			CON_DEST.executeQuery( "BEGIN" );
-			CON_DEST.executeQuery( update.toString() );
+//			CON_DEST.executeQuery( update.toString() );
 //			CON_DEST.executeQuery( "COMMIT" );
+			addQuery( update.toString() );
+			
 		}
 		catch( Exception ex )
 		{
@@ -521,6 +585,7 @@ public class Diff extends Connector implements ConfigurationProperties
 	private void addQuery(String sql ) throws Exception 
 	{
 		queryBuffer.append( sql );
+		queryBuffer.append( "\n" );
 		if( ++queryCounter > BATCH_NUMBER )
 		{
 			queryCounter = 0;
@@ -643,7 +708,9 @@ public class Diff extends Connector implements ConfigurationProperties
 		Select2 select = new Select2( table.toString(), null, fields.toArray( new String[ fields.size() ] ), ordera );
 		select.setLimit( rows );
 		select.setOffset( page * rows );
+		System.out.println( "Load Table Connection: " + con );
 		System.out.println( "Load Table: " + select.toString() );
+		select.setDatabaseType( con.getHelper().getType() );
 //		Map<PrimaryKeyValue,TableRow> map = new HashMap<PrimaryKeyValue,TableRow>();
 		TablePage tablePage = new TablePage();
 		try
@@ -670,16 +737,16 @@ public class Diff extends Connector implements ConfigurationProperties
 					}
 					
 //					row.rowMd5 = sb.toString();
-					System.out.println( "PK: " + pkv.toString() + " md5: " + row.getMd5() );
+//					System.out.println( "PK: " + pkv.toString() + " md5: " + row.getMd5() );
 					if( getAction )
 					{
-						row.status = ( String )array.get( i, pka.length + colsa.length );
+						row.setStatus( ( String )array.get( i, pka.length + colsa.length ) );
 					}
 					tablePage.put( pkv, row );
 				}
 				catch( EndOfArrayException ex )
 				{
-					System.out.println( "End of array" );
+					System.out.println( "End of array - " + i );
 					break;
 				}
 			}
@@ -689,6 +756,7 @@ public class Diff extends Connector implements ConfigurationProperties
 			new Exception( "Error in query: " + select );
 			throw ex;
 		}
+		System.out.println( "Done loading table page: " + tablePage.size() + " pkvFirst: " + tablePage.getFirst() + " pkvLast: " + tablePage.getLast() );
 		return tablePage;
 	}
 	

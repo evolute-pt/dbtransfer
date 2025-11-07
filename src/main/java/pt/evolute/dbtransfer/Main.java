@@ -90,6 +90,7 @@ public class Main
 	 * @param args the command line arguments
 	 */
 	public static void main(String[] args)
+		throws Exception
 	{
 		if( args.length != 1 )
 		{
@@ -119,9 +120,8 @@ public class Main
 				catch( InterruptedException ex )
 				{
 				}
-				System.exit( 2 );				
+		      	throw th;
 			}
-			System.exit( 0 );
 		}
 	}
 	
